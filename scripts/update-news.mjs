@@ -91,7 +91,7 @@ const results = await Promise.allSettled([
 
 const fresh = results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
 const previous = Array.isArray(fallback.items) ? fallback.items : []
-const items = (fresh.length ? fresh : previous)
+const items = [...fresh, ...previous]
   .filter((item, index, all) => all.findIndex((candidate) => candidate.url === item.url) === index)
   .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
   .slice(0, 18)
