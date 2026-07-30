@@ -1,5 +1,11 @@
 export const priorities = { altino: 1, matese: 2, perugia: 3 }
-export function chooseHomeMatch(matches) { return [...matches].filter((match) => match.home).sort((a, b) => priorities[a.team] - priorities[b.team])[0] ?? null }
+export function chooseHomeMatch(matches) {
+  return [...matches].filter((match) => match.home).sort((a, b) =>
+    priorities[a.team] - priorities[b.team] ||
+    (a.date ?? '').localeCompare(b.date ?? '') ||
+    (a.time ?? '').localeCompare(b.time ?? '')
+  )[0] ?? null
+}
 export function groupByWeekend(matches) {
   const groups = new Map()
   for (const match of matches) {
