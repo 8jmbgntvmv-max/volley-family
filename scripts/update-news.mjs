@@ -28,7 +28,9 @@ function rssItems(xml, team, source, filter = () => true) {
     const title = decode(tag(block, 'title'))
     const description = decode(tag(block, 'description'))
     const url = decode(tag(block, 'link'))
-    const image = block.match(/<media:content[^>]+url=["']([^"']+)/i)?.[1] ?? block.match(/<enclosure[^>]+url=["']([^"']+)/i)?.[1]
+    const image = block.match(/<media:content[^>]+url=["']([^"']+)/i)?.[1]
+      ?? block.match(/<enclosure[^>]+url=["']([^"']+)/i)?.[1]
+      ?? tag(block, 'description').match(/<img[^>]+src=["']([^"']+)/i)?.[1]
     const publishedAt = new Date(decode(tag(block, 'pubDate'))).toISOString()
     return { id: `${team}-${source}-${index}-${publishedAt}`, team, title, url, source, publishedAt, image, search: `${title} ${description}` }
   }).filter((item) => item.title && item.url && filter(item.search)).map(({ search: _search, ...item }) => item)
@@ -50,6 +52,16 @@ function perugiaItems(html) {
       image: block.match(/<img[^>]+src="([^"]+)"/i)?.[1],
     }
   }).filter((item) => item.title && item.url)
+}
+
+async function articleImage(url) {
+  try {
+    const html = await get(url)
+    return html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)?.[1]
+      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
+  } catch {
+    return undefined
+  }
 }
 
 const curatedMatese = [
@@ -91,10 +103,11 @@ const results = await Promise.allSettled([
 
 const fresh = results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
 const previous = Array.isArray(fallback.items) ? fallback.items : []
-const items = [...fresh, ...previous]
+const deduplicated = [...fresh, ...previous]
   .filter((item, index, all) => all.findIndex((candidate) => candidate.url === item.url) === index)
   .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
   .slice(0, 18)
+const items = await Promise.all(deduplicated.map(async (item) => item.image ? item : { ...item, image: await articleImage(item.url) }))
 
 await writeFile(new URL('../public/news.json', import.meta.url), `${JSON.stringify({ updatedAt: new Date().toISOString(), items }, null, 2)}\n`)
 console.log(`News aggiornate: ${items.length}`)

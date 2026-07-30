@@ -23,7 +23,7 @@ function MatchRow({ match, chosen = false }: { match: Match; chosen?: boolean })
   return <article className={`match-row ${chosen ? 'chosen' : ''}`}>
     <span className="team-dot" style={{ background: team.color }} />
     <div className="match-copy"><strong>{team.shortName} · {match.home ? 'Casa' : 'Trasferta'}</strong><span>{match.home ? `${team.shortName} – ${match.opponent}` : `${match.opponent} – ${team.shortName}`}</span></div>
-    <div className="match-meta"><strong>{match.time ?? 'Orario da definire'}</strong><span>{match.competition}</span></div>
+    <div className="match-meta"><strong>{match.time ?? 'Orario da definire'}</strong><span>{match.venue ?? match.competition}{match.matchNumber ? ` · gara ${match.matchNumber}` : ''}</span></div>
   </article>
 }
 
@@ -35,7 +35,7 @@ function ComparisonCell({ teamId, weekMatches, choice }: { teamId: TeamId; weekM
     {teamMatches.length ? teamMatches.map((match) => <div className={`compare-match ${match.home ? 'home' : 'away'} ${choice?.id === match.id ? 'selected' : ''}`} key={match.id}>
       <span className="where">{match.home ? 'IN CASA' : 'TRASFERTA'}</span>
       <strong>{match.opponent}</strong>
-      <small>{dateLabel(match.date)} · {match.time ?? 'orario da definire'}</small>
+      <small>{dateLabel(match.date)} · {match.time ?? 'orario da definire'}{match.venue ? ` · ${match.venue}` : ''}</small>
     </div>) : <div className="compare-empty">{team.status === 'pending' ? 'Calendario in attesa' : 'Non gioca'}</div>}
   </div>
 }
@@ -43,7 +43,7 @@ function ComparisonCell({ teamId, weekMatches, choice }: { teamId: TeamId; weekM
 function NewsCard({ item }: { item: NewsItem }) {
   const team = teams.find((candidate) => candidate.id === item.team)!
   return <a className="news-card" href={item.url} target="_blank" rel="noreferrer">
-    {item.image && <img src={item.image} alt="" loading="lazy" />}
+    <div className="news-preview" style={{ background: `linear-gradient(145deg, ${team.color}, ${team.softColor})` }}><span>{team.code}</span>{item.image && <img src={item.image} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none' }} />}</div>
     <div className="news-card-copy"><span className="news-source"><i style={{ background: team.color }} />{team.shortName} · {item.source}</span><strong>{item.title}</strong><time>{dateLabel(item.publishedAt.slice(0, 10))}</time></div>
   </a>
 }
