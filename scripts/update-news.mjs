@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises'
+import { articleImageFromHtml } from '../src/lib/news-image.mjs'
 
 const fallback = JSON.parse(await readFile(new URL('../public/news.json', import.meta.url), 'utf8'))
 const decode = (value = '') => value
@@ -57,8 +58,7 @@ function perugiaItems(html) {
 async function articleImage(url) {
   try {
     const html = await get(url)
-    return html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)?.[1]
-      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
+    return articleImageFromHtml(html)
   } catch {
     return undefined
   }
