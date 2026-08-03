@@ -1,8 +1,35 @@
 {
-  "updatedAt": "2026-07-30T23:03:24.340Z",
+  "updatedAt": "2026-08-03T09:53:05.862Z",
   "items": [
     {
-      "id": "perugia-official-0-30/07/2026",
+      "id": "altino-Sito ufficiale-0-2026-08-03T08:40:55.000Z",
+      "team": "altino",
+      "title": "CAMILLA LUPOLI IN ROSSOBLÙ: TALENTO E RITMO AL PALLEGGIO",
+      "url": "https://www.altinovolley.it/camilla-lupoli-in-rossoblu-talento-e-ritmo-al-palleggio/",
+      "source": "Sito ufficiale",
+      "publishedAt": "2026-08-03T08:40:55.000Z",
+      "image": "https://www.altinovolley.it/wp-content/uploads/2026/08/cami.png"
+    },
+    {
+      "id": "perugia-official-0-02/08/2026",
+      "team": "perugia",
+      "title": "NOTA STAMPA SIR SUSA SCAI PERUGIA del 02/08/2026",
+      "url": "https://www.sirsafetyperugia.it/new/nota-stampa-sir-susa-scai-perugia-del-02-08-2026",
+      "source": "Sito ufficiale",
+      "publishedAt": "2026-08-02T12:00:00.000Z",
+      "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/nota_lutto.jpg"
+    },
+    {
+      "id": "perugia-official-1-31/07/2026",
+      "team": "perugia",
+      "title": "IL CLUB BIANCONERO PUNTA AD ESPANDERE LA CULTURA DELLA PALLAVOLO: TORNANO GLI OPEN DAY!",
+      "url": "https://www.sirsafetyperugia.it/new/il-club-bianconero-punta-ad-espandere-la-cultura-della-pallavolo-tornano-gli-open-day",
+      "source": "Sito ufficiale",
+      "publishedAt": "2026-07-31T12:00:00.000Z",
+      "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/ORIZZONTALE_%289%29.png"
+    },
+    {
+      "id": "perugia-official-2-30/07/2026",
       "team": "perugia",
       "title": "RICOMINCIAMO… VERSO UN CAMPIONATO PIU’ COMPETITIVO CHE MAI: LO SPETTACOLO È ASSICURATO!",
       "url": "https://www.sirsafetyperugia.it/new/ricominciamo-verso-un-campionato-piu-competitivo-che-mai-lo-spettacolo-e-assicurato",
@@ -11,12 +38,13 @@
       "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/SIR-BENDA-260104_180003_MB60638_uxga.jpg"
     },
     {
-      "id": "altino-Sito ufficiale-0-2026-07-30T09:52:09.000Z",
+      "id": "altino-Sito ufficiale-1-2026-07-30T09:52:09.000Z",
       "team": "altino",
       "title": "GIORGIA BERNASCONI, INTENSITÀ E PRESENZA PER IL CENTRO ROSSOBLÙ",
       "url": "https://www.altinovolley.it/giorgia-bernasconi-intensita-e-presenza-per-il-centro-rossoblu/",
       "source": "Sito ufficiale",
-      "publishedAt": "2026-07-30T09:52:09.000Z"
+      "publishedAt": "2026-07-30T09:52:09.000Z",
+      "image": "https://www.altinovolley.it/wp-content/uploads/2026/07/bernasito.png"
     },
     {
       "id": "perugia-official-1-29/07/2026",
@@ -37,28 +65,31 @@
       "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/orizzontale_%287%29.png"
     },
     {
-      "id": "altino-Sito ufficiale-1-2026-07-28T07:27:39.000Z",
+      "id": "altino-Sito ufficiale-2-2026-07-28T07:27:39.000Z",
       "team": "altino",
       "title": "AVASTESE VOLLEY: un progetto per Vasto, con Vasto",
       "url": "https://www.altinovolley.it/avastese-volley-un-progetto-per-vasto-con-vasto/",
       "source": "Sito ufficiale",
-      "publishedAt": "2026-07-28T07:27:39.000Z"
+      "publishedAt": "2026-07-28T07:27:39.000Z",
+      "image": "https://www.altinovolley.it/wp-content/uploads/2026/07/n.png"
     },
     {
-      "id": "altino-Sito ufficiale-2-2026-07-24T10:15:41.000Z",
+      "id": "altino-Sito ufficiale-3-2026-07-24T10:15:41.000Z",
       "team": "altino",
       "title": "SARA MORI, GIOVANE PROSPETTIVA AL CENTRO PER IL ROSTER ROSSOBLÙ",
       "url": "https://www.altinovolley.it/sara-mori-giovane-prospettiva-al-centro-per-il-roster-rossoblu/",
       "source": "Sito ufficiale",
-      "publishedAt": "2026-07-24T10:15:41.000Z"
+      "publishedAt": "2026-07-24T10:15:41.000Z",
+      "image": "https://www.altinovolley.it/wp-content/uploads/2026/07/sarasito.png"
     },
     {
-      "id": "altino-Sito ufficiale-3-2026-07-19T01:35:32.000Z",
+      "id": "altino-Sito ufficiale-4-2026-07-19T01:35:32.000Z",
       "team": "altino",
       "title": "QUALITÀ ED ESPERIENZA IN BANDA: ARRIVA CLAUDIA PROVARONI",
       "url": "https://www.altinovolley.it/qualita-ed-esperienza-in-banda-arriva-claudia-provaroni/",
       "source": "Sito ufficiale",
-      "publishedAt": "2026-07-19T01:35:32.000Z"
+      "publishedAt": "2026-07-19T01:35:32.000Z",
+      "image": "https://www.altinovolley.it/wp-content/uploads/2026/07/claudia-sito.png"
     },
     {
       "id": "altino-Sito ufficiale-4-2026-07-13T09:32:34.000Z",
@@ -66,7 +97,8 @@
       "title": "DETERMINAZIONE IN BANDA: GAIA RIVA È ROSSOBLÙ",
       "url": "https://www.altinovolley.it/determinazione-in-banda-gaia-riva-e-rossoblu/",
       "source": "Sito ufficiale",
-      "publishedAt": "2026-07-13T09:32:34.000Z"
+      "publishedAt": "2026-07-13T09:32:34.000Z",
+      "image": "https://www.altinovolley.it/wp-content/uploads/2026/07/gaiasito.png"
     },
     {
       "id": "matese-volleycloud-2026-06-22",
@@ -74,7 +106,8 @@
       "title": "È arrivato il momento… Ciao Polisportiva Matese",
       "url": "https://www.volleycloud.it/2026/06/e-arrivato-il-momento-ciao-polisportiva-matese/",
       "source": "VolleyCloud",
-      "publishedAt": "2026-06-22T12:00:00.000Z"
+      "publishedAt": "2026-06-22T12:00:00.000Z",
+      "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjU3NyIgdmlld0JveD0iMCAwIDEwMjQgNTc3Ij48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBzdHlsZT0iZmlsbDojY2ZkNGRiO2ZpbGwtb3BhY2l0eTogMC4xOyIvPjwvc3ZnPg=="
     },
     {
       "id": "matese-punto-sport-stadio-2026-06-18",

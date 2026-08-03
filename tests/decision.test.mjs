@@ -4,12 +4,23 @@ import { readFile } from 'node:fs/promises'
 import { groupByWeekend } from '../src/lib/decision.mjs'
 import { extractMateseResults } from '../src/lib/fipav-results.mjs'
 import { articleImageFromHtml } from '../src/lib/news-image.mjs'
+import { mergeNewsItems } from '../src/lib/news-items.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
 test('recupera l’immagine principale dagli articoli Altino', () => {
   const html = '<img width="1054" src="https://www.altinovolley.it/wp-content/uploads/2026/08/cami.png" class="post-top-featured wp-post-image" alt="">'
   assert.equal(articleImageFromHtml(html), 'https://www.altinovolley.it/wp-content/uploads/2026/08/cami.png')
+})
+test('un aggiornamento incompleto non cancella news o immagini già pubblicate', () => {
+  const fresh = [{ id: 'new', team: 'altino', title: 'News di oggi', url: 'https://example.test/oggi', source: 'Sito ufficiale', publishedAt: '2026-08-03T08:40:55.000Z' }]
+  const previous = [
+    { ...fresh[0], image: 'https://example.test/oggi.png' },
+    { id: 'old', team: 'altino', title: 'News precedente', url: 'https://example.test/prima', source: 'Sito ufficiale', publishedAt: '2026-07-30T09:52:09.000Z' },
+  ]
+  const merged = mergeNewsItems(fresh, previous)
+  assert.equal(merged.length, 2)
+  assert.equal(merged[0].image, 'https://example.test/oggi.png')
 })
 test('non propone una partita consigliata', async () => { const [source, styles] = await Promise.all([readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'), readFile(new URL('../src/App.css', import.meta.url), 'utf8')]); assert.doesNotMatch(`${source}\n${styles}`, /chooseHomeMatch|CONSIGLIATA|partita consigliata/i); assert.match(source, /senza suggerimenti/i) })
 test('estrae il risultato ufficiale Matese dal formato FIPAV', () => {

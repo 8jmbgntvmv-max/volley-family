@@ -1,7 +1,10 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { articleImageFromHtml } from '../src/lib/news-image.mjs'
+import { mergeNewsItems } from '../src/lib/news-items.mjs'
 
-const fallback = JSON.parse(await readFile(new URL('../public/news.json', import.meta.url), 'utf8'))
+const outputUrl = new URL('../public/news.json', import.meta.url)
+const localFallback = JSON.parse(await readFile(outputUrl, 'utf8'))
+const LIVE_NEWS_URL = 'https://8jmbgntvmv-max.github.io/volley-family/news.json'
 const decode = (value = '') => value
   .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
   .replace(/<[^>]+>/g, ' ')
@@ -14,9 +17,19 @@ const decode = (value = '') => value
   .trim()
 
 async function get(url) {
-  const response = await fetch(url, { headers: { 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)' } })
+  const requestUrl = new URL(url)
+  requestUrl.searchParams.set('_vf', Date.now().toString())
+  const response = await fetch(requestUrl, { cache: 'no-store', headers: { 'cache-control': 'no-cache', pragma: 'no-cache', 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)' } })
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`)
   return response.text()
+}
+
+let fallback = localFallback
+try {
+  const published = JSON.parse(await get(LIVE_NEWS_URL))
+  fallback = { updatedAt: published.updatedAt ?? localFallback.updatedAt, items: mergeNewsItems(published.items ?? [], localFallback.items ?? []) }
+} catch {
+  // Se GitHub Pages non risponde, resta disponibile il contenuto salvato nel repository.
 }
 
 function tag(block, name) {
@@ -103,11 +116,8 @@ const results = await Promise.allSettled([
 
 const fresh = results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
 const previous = Array.isArray(fallback.items) ? fallback.items : []
-const deduplicated = [...fresh, ...previous]
-  .filter((item, index, all) => all.findIndex((candidate) => candidate.url === item.url) === index)
-  .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
-  .slice(0, 18)
+const deduplicated = mergeNewsItems(fresh, previous)
 const items = await Promise.all(deduplicated.map(async (item) => item.image ? item : { ...item, image: await articleImage(item.url) }))
 
-await writeFile(new URL('../public/news.json', import.meta.url), `${JSON.stringify({ updatedAt: new Date().toISOString(), items }, null, 2)}\n`)
+await writeFile(outputUrl, `${JSON.stringify({ updatedAt: new Date().toISOString(), items }, null, 2)}\n`)
 console.log(`News aggiornate: ${items.length}`)
