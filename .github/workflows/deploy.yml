@@ -24,6 +24,7 @@ jobs:
       - run: npm ci
       - run: npm run news:update
       - run: npm run results:update
+      - run: npm run league:update
       - run: npm run lint
       - run: npm test
       - run: npm run build

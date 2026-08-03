@@ -1,0 +1,43 @@
+{
+  "updatedAt": "2026-08-03T21:32:35.163Z",
+  "teams": {
+    "altino": {
+      "source": "Lega Volley Femminile",
+      "season": "2026/27",
+      "links": {
+        "results": "https://www.legavolleyfemminile.it/club/tenaglia-altino-avastese-volley/710969/risultati/",
+        "standings": "https://www.legavolleyfemminile.it/classifica/?campionato=710340&stagione=2026",
+        "statistics": "https://www.legavolleyfemminile.it/club/tenaglia-altino-avastese-volley/710969/stats/?stagione=2026&tipocomp=RS"
+      },
+      "standing": null,
+      "stats": {
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "setsPlayed": null,
+        "setsWon": null,
+        "setsLost": null
+      }
+    },
+    "perugia": {
+      "source": "Lega Pallavolo Serie A",
+      "season": "2026/27",
+      "links": {
+        "results": "https://www.legavolley.it/risultati/?IdCampionato=999",
+        "standings": "https://www.legavolley.it/classifica/?IdCampionato=999",
+        "statistics": "https://www.legavolley.it/statistiche/?TipoStat=1.1&Squadra=BASTIA&AnnoInizio=2026"
+      },
+      "standing": null,
+      "stats": null
+    },
+    "matese": {
+      "source": "FIPAV nazionale",
+      "season": "2026/27",
+      "links": {
+        "results": "https://www.federvolley.it/serie-b2-femminile-calendario"
+      },
+      "standing": null,
+      "stats": null
+    }
+  }
+}

@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "news:update": "node scripts/update-news.mjs",
+    "league:update": "node scripts/update-league-data.mjs",
     "results:update": "node scripts/update-results.mjs",
     "test": "node --test tests/*.test.mjs",
     "preview": "vite preview"
