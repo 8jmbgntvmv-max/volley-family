@@ -2,13 +2,17 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
+import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
+import { rosters } from './data/rosters'
 
 type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'rules'
 type AthleteId = 'chiara-lupoli' | 'camilla-lupoli' | 'luca-loreti'
-type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[] }
+type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[]; summary?: string; matchFocus?: MatchFocus }
 type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[] }
 type ResultsByMatch = Record<string, MatchResult>
+type LeagueTeamData = { source: string; season: string; links: { results?: string; standings?: string; statistics?: string }; standing: null | { position?: number; points?: number; played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; stats: null | { played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number } }
+type LeagueData = { updatedAt: string | null; teams: Record<TeamId, LeagueTeamData> }
 const nav: { id: Screen; label: string; icon: string }[] = [
   { id: 'home', label: 'Home', icon: '⌂' }, { id: 'agenda', label: 'Confronto', icon: '▦' },
   { id: 'teams', label: 'Squadre', icon: '●' }, { id: 'news', label: 'News', icon: '◉' },
@@ -77,22 +81,93 @@ function AthleteFocus({ news }: { news: NewsItem[] }) {
   </section>
 }
 
+const focusGroups: { id: MatchFocus; title: string; empty: string }[] = [
+  { id: 'pre', title: 'Pre-partita', empty: 'Nessun commento pre-partita pubblicato.' },
+  { id: 'post', title: 'Post-partita', empty: 'Nessun commento post-partita pubblicato.' },
+  { id: 'availability', title: 'Assenze e scelte', empty: 'Nessuna indisponibilità o scelta tecnica riportata.' },
+]
+const focusFor = (item: NewsItem) => item.matchFocus ?? classifyMatchFocus(`${item.title} ${item.summary ?? ''}`)
+
+function HomeMatchFocus({ news, onOpenNews }: { news: NewsItem[]; onOpenNews: () => void }) {
+  return <section className="home-dashboard focus-dashboard" aria-labelledby="home-focus-title">
+    <div className="dashboard-heading"><div><p className="eyebrow">Aggiornamenti partita</p><h2 id="home-focus-title">Pre e post partita</h2></div><button className="text-button" onClick={onOpenNews}>Tutte le news</button></div>
+    <p className="dashboard-note">Sintesi delle fonti pubbliche. Assenze, infortuni e scelte tecniche compaiono soltanto quando sono riportati esplicitamente dalla fonte.</p>
+    <div className="focus-grid">{focusGroups.map((group) => {
+      const items = news.filter((item) => item.publishedAt.slice(0, 10) >= '2026-08-01' && focusFor(item) === group.id).slice(0, 2)
+      return <article className={`focus-card ${group.id}`} key={group.id}><div className="focus-card-title"><span>{group.id === 'pre' ? 'PRIMA' : group.id === 'post' ? 'DOPO' : 'ROSA'}</span><strong>{group.title}</strong></div>{items.length ? <div className="focus-links">{items.map((item) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id}><small>{item.source === 'Sito ufficiale' ? 'Fonte ufficiale' : 'Fonte giornalistica'} · {dateLabel(item.publishedAt.slice(0, 10))}</small><strong>{item.title}</strong>{item.summary && <span>{item.summary}</span>}</a>)}</div> : <p>{group.empty}<br /><b>Monitoraggio automatico attivo.</b></p>}</article>
+    })}</div>
+  </section>
+}
+
+function HomeRosters() {
+  return <section className="home-dashboard" aria-labelledby="home-rosters-title"><div className="dashboard-heading"><div><p className="eyebrow">Stagione 2026/27</p><h2 id="home-rosters-title">Roster</h2></div></div><p className="dashboard-note">Sono mostrati soltanto i nomi già annunciati. Le rose incomplete si aggiornano con le comunicazioni delle società.</p><div className="roster-grid">{rosters.map((roster) => {
+    const team = teams.find((candidate) => candidate.id === roster.team)!
+    return <details className="roster-card" key={roster.team}><summary><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><strong>{team.shortName}</strong><small>{roster.status === 'complete' ? `${roster.players.length} atleti · completo` : `${roster.players.length} annunciati · in aggiornamento`}</small></div><b>＋</b></summary><div className="roster-list">{roster.players.map((player) => <div className={player.followed ? 'followed' : ''} key={player.name}><span>{player.name}{player.followed && <i>SEGUITO</i>}</span><small>{player.role ?? 'Ruolo da pubblicare'}</small></div>)}</div><a className="roster-source" href={roster.sourceUrl} target="_blank" rel="noreferrer">{roster.sourceLabel}</a></details>
+  })}</div></section>
+}
+
+function HomeResultsAndStandings({ results, leagueData }: { results: ResultsByMatch; leagueData: LeagueData | null }) {
+  return <section className="home-dashboard" aria-labelledby="home-results-title"><div className="dashboard-heading"><div><p className="eyebrow">Campionati</p><h2 id="home-results-title">Risultati e classifiche</h2></div></div><p className="dashboard-note">La stagione non è ancora iniziata: i dati 2025/26 non vengono mescolati con il nuovo campionato.</p><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Ultimi risultati</h3>{teams.map((team) => {
+    const played = matches.filter((match) => match.team === team.id && match.matchNumber && results[match.matchNumber]?.played).sort((a, b) => b.date.localeCompare(a.date))[0]
+    const result = played?.matchNumber ? results[played.matchNumber] : undefined
+    return <div className="scoreboard-row" key={team.id}><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>{played ? `${played.home ? team.shortName : played.opponent} – ${played.home ? played.opponent : team.shortName}` : 'In attesa della prima giornata'}</small></div><b>{result ? scoreLabel(result) : '—'}</b></div>
+  })}</article><article className="scoreboard-card"><h3>Classifiche 2026/27</h3>{teams.map((team) => { const official = leagueData?.teams[team.id]; return <div className="scoreboard-row" key={team.id}><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>{official?.standing?.played ? `${official.standing.points ?? 0} punti · ${official.source}` : 'In attesa della prima classifica'}</small></div><b>{official?.standing?.played && official.standing.position ? `${official.standing.position}ª` : '—'}</b></div> })}<p className="standings-note">Le posizioni appariranno dopo la pubblicazione della prima classifica ufficiale.</p></article></div></section>
+}
+
+function teamScore(match: Match, result: MatchResult) {
+  return match.home
+    ? { teamSets: result.firstTeamSets, opponentSets: result.secondTeamSets }
+    : { teamSets: result.secondTeamSets, opponentSets: result.firstTeamSets }
+}
+
+function HomeStatistics({ results, leagueData }: { results: ResultsByMatch; leagueData: LeagueData | null }) {
+  return <section className="home-dashboard" aria-labelledby="home-statistics-title"><div className="dashboard-heading"><div><p className="eyebrow">Numeri della stagione</p><h2 id="home-statistics-title">Statistiche</h2></div></div><p className="dashboard-note">Altino è collegata alla Lega Volley Femminile A2, Perugia alla Lega Pallavolo Serie A e Matese alla FIPAV nazionale. Le statistiche individuali appariranno soltanto quando saranno pubblicate dalla competizione.</p><div className="league-source-grid">{teams.map((team) => { const official = leagueData?.teams[team.id]; return official?.links.statistics || official?.links.results ? <a href={official.links.statistics ?? official.links.results} target="_blank" rel="noreferrer" key={team.id}><span className="team-dot" style={{ background: team.color }} />{team.shortName}<small>{official.source}</small></a> : null })}</div><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Ultima partita</h3>{teams.map((team) => {
+    const played = matches.filter((match) => match.team === team.id && match.matchNumber && results[match.matchNumber]?.played).sort((a, b) => b.date.localeCompare(a.date))[0]
+    const result = played?.matchNumber ? results[played.matchNumber] : undefined
+    return <div className="stat-match" key={team.id}><div className="scoreboard-row"><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>{played ? `${dateLabel(played.date)} · ${played.opponent}` : 'Statistiche dopo la prima gara'}</small></div><b>{result ? scoreLabel(result) : '—'}</b></div>{result && <p>Parziali: {setsLabel(result)}</p>}</div>
+  })}</article><article className="scoreboard-card"><h3>Andamento campionato</h3>{teams.map((team) => {
+    const played = matches.flatMap((match) => {
+      if (match.team !== team.id || !match.matchNumber || !results[match.matchNumber]?.played) return []
+      const result = results[match.matchNumber]
+      return [{ match, result, score: teamScore(match, result) }]
+    })
+    const wins = played.filter((item) => item.score.teamSets > item.score.opponentSets).length
+    const setsFor = played.reduce((total, item) => total + item.score.teamSets, 0)
+    const setsAgainst = played.reduce((total, item) => total + item.score.opponentSets, 0)
+    const points = played.reduce((total, item) => {
+      const { teamSets, opponentSets } = item.score
+      if (teamSets === 3) return total + (opponentSets === 2 ? 2 : 3)
+      if (teamSets === 2 && opponentSets === 3) return total + 1
+      return total
+    }, 0)
+    const official = leagueData?.teams[team.id]
+    const officialStats = team.id === 'altino' ? official?.stats : team.id === 'perugia' ? official?.standing : null
+    return <div className="championship-stat" key={team.id}><div><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div>{officialStats?.played ? <p><b>{officialStats.played}</b> gare · <b>{officialStats.wins ?? 0}</b> V · <b>{officialStats.losses ?? 0}</b> P · set <b>{officialStats.setsWon ?? 0}–{officialStats.setsLost ?? 0}</b>{official?.standing?.points !== undefined && ` · ${official.standing.points} pt`}</p> : played.length ? <p><b>{played.length}</b> gare · <b>{wins}</b> V · <b>{played.length - wins}</b> P · set <b>{setsFor}–{setsAgainst}</b> · <b>{points}</b> pt</p> : <p>In attesa della prima gara ufficiale.</p>}</div>
+  })}</article></div></section>
+}
+
 function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [teamFilter, setTeamFilter] = useState<TeamId | 'all'>('all')
   const [newsFilter, setNewsFilter] = useState<TeamId | 'all'>('all')
   const [news, setNews] = useState<NewsItem[]>([])
   const [results, setResults] = useState<ResultsByMatch>({})
+  const [leagueData, setLeagueData] = useState<LeagueData | null>(null)
   const weekends = useMemo(() => groupByWeekend(matches), [])
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}news.json`).then((response) => response.json()).then((data) => setNews(data.items ?? [])).catch(() => setNews([]))
     fetch(`${import.meta.env.BASE_URL}results.json`).then((response) => response.json()).then((data) => setResults(Object.fromEntries((data.items ?? []).map((item: MatchResult) => [item.matchNumber, item])))).catch(() => setResults({}))
+    fetch(`${import.meta.env.BASE_URL}league-data.json`).then((response) => response.json()).then(setLeagueData).catch(() => setLeagueData(null))
   }, [])
   return <div className="app-shell">
     <header className="topbar"><div><p className="eyebrow">Stagione 2026/27</p><h1>Volley Family</h1></div><div className="app-mark">VF</div></header>
     <main className="content">
       {screen === 'home' && <>
         <section className="hero-card"><p className="eyebrow light">Agenda condivisa</p><h2>Tutte le partite, senza suggerimenti</h2><p>Consulta liberamente gare in casa e trasferte di Altino, Matese e Perugia.</p><button onClick={() => setScreen('agenda')}>Apri i calendari</button></section>
+        <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
+        <HomeRosters />
+        <HomeResultsAndStandings results={results} leagueData={leagueData} />
+        <HomeStatistics results={results} leagueData={leagueData} />
         <section className="section-block"><div className="section-title"><div><p className="eyebrow">Le tue squadre</p><h2>Tre campionati, un’unica agenda</h2></div><button className="text-button" onClick={() => setScreen('teams')}>Vedi tutte</button></div>
           <div className="team-grid">{teams.map((team) => <button className="team-card" key={team.id} onClick={() => { setTeamFilter(team.id); setScreen('teams') }}><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><strong>{team.shortName}</strong><small>{team.championship}</small></button>)}</div>
         </section>

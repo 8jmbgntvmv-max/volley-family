@@ -1,6 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { articleImageFromHtml } from '../src/lib/news-image.mjs'
 import { mergeNewsItems } from '../src/lib/news-items.mjs'
+import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
+import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 
 const outputUrl = new URL('../public/news.json', import.meta.url)
 const localFallback = JSON.parse(await readFile(outputUrl, 'utf8'))
@@ -46,7 +48,7 @@ function rssItems(xml, team, source, filter = () => true) {
       ?? block.match(/<enclosure[^>]+url=["']([^"']+)/i)?.[1]
       ?? tag(block, 'description').match(/<img[^>]+src=["']([^"']+)/i)?.[1]
     const publishedAt = new Date(decode(tag(block, 'pubDate'))).toISOString()
-    return { id: `${team}-${source}-${index}-${publishedAt}`, team, title, url, source, publishedAt, image, search: `${title} ${description}` }
+    return { id: `${team}-${source}-${index}-${publishedAt}`, team, title, url, source, publishedAt, image, summary: description.slice(0, 360) || undefined, search: `${title} ${description}` }
   }).filter((item) => item.title && item.url && filter(item.search)).map(({ search: _search, ...item }) => item)
 }
 
@@ -68,12 +70,12 @@ function perugiaItems(html) {
   }).filter((item) => item.title && item.url)
 }
 
-async function articleImage(url) {
+async function articleDetails(url) {
   try {
     const html = await get(url)
-    return articleImageFromHtml(html)
+    return { image: articleImageFromHtml(html), summary: articleSummaryFromHtml(html) }
   } catch {
-    return undefined
+    return {}
   }
 }
 
@@ -139,7 +141,12 @@ const results = await Promise.allSettled([
 const fresh = results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
 const previous = Array.isArray(fallback.items) ? fallback.items : []
 const deduplicated = mergeNewsItems(fresh, previous)
-const items = await Promise.all(deduplicated.map(async (item) => item.image || item.source === 'Ricerca notizie' ? item : { ...item, image: await articleImage(item.url) }))
+const items = await Promise.all(deduplicated.map(async (item) => {
+  const details = item.source === 'Ricerca notizie' || (item.image && item.summary) ? {} : await articleDetails(item.url)
+  const summary = item.summary || details.summary
+  const matchFocus = item.matchFocus || classifyMatchFocus(`${item.title} ${summary ?? ''}`) || undefined
+  return { ...item, image: item.image || details.image, summary, matchFocus }
+}))
 
 await writeFile(outputUrl, `${JSON.stringify({ updatedAt: new Date().toISOString(), items }, null, 2)}\n`)
 console.log(`News aggiornate: ${items.length}`)
