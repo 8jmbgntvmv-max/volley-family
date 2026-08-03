@@ -5,5 +5,5 @@ export function mergeNewsItems(...collections) {
     const existing = byUrl.get(item.url)
     byUrl.set(item.url, existing ? { ...item, ...existing, image: existing.image || item.image } : item)
   }
-  return [...byUrl.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 18)
+  return [...byUrl.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 40)
 }

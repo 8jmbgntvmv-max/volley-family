@@ -1,6 +1,37 @@
 {
-  "updatedAt": "2026-08-03T09:53:05.862Z",
+  "updatedAt": "2026-08-03T21:04:51.763Z",
   "items": [
+    {
+      "id": "altino-Ricerca notizie-3-2026-08-03T15:22:32.000Z",
+      "team": "altino",
+      "title": "Il mercato del volley. L’Altino firma un altro colpo: presa la palleggiatrice Lupoli - il Centro",
+      "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPZEVfdWVQd0pGQm5NV3M5dTVlTTRJd2dFM29WRldPX1FOQWNfWFlfMjZzVFgzU0hFOEZQV1JsUkFOa3VFRmxRekk0Q1llRm1yV1c2aExuTVZWdE95LUNHQy16ZUZyWTc0NEhRV2h1QlNQVExvX3hYeXFwcjNhTU8yUmFnRng0NEE4MHZGdkZGUm5fWlRaQ1cwbjZiamRJSzhFRDJ5MnhVMkM2eXo4NjlyODczRkJ0VV9WSHhBNQ?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-08-03T15:22:32.000Z",
+      "athleteIds": [
+        "camilla-lupoli"
+      ]
+    },
+    {
+      "id": "perugia-official-0-03/08/2026",
+      "team": "perugia",
+      "title": "IL PALAZZETTO DI PERUGIA SI VESTE DI TRICOLORE!",
+      "url": "https://www.sirsafetyperugia.it/new/il-palazzetto-di-perugia-si-veste-di-tricolore",
+      "source": "Sito ufficiale",
+      "publishedAt": "2026-08-03T12:00:00.000Z",
+      "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/WhatsApp_Image_2026-08-03_at_09.51.20_%282%29_.jpeg"
+    },
+    {
+      "id": "altino-Ricerca notizie-1-2026-08-03T10:56:07.000Z",
+      "team": "altino",
+      "title": "Pallavolo serie a2 femminile, l’Altino annuncia l’arrivo dell’alzatrice romana Lupoli - Abruzzo Popolare",
+      "url": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxOOG05a21qc1FzWlFjd2hZUmJ1SWx1WXN1Z0c3ZG11OUJkNjg4VF9KZ2QzcEx1UVVIYnZEM1h5NUZwSWhwbmpaQUtWQkFpQlpSQVVPRUtja1VaMUdWdVVnbGJGMk1ZYWJvdGktWmhzVXdYaFItaTZacEE0R3BOTUIybGFpWTV6Vm9tUkdKRXdWZVBqNU54SXA5MHEwRkdweHVXbjhBV1ppc21uOWktcFFfelU2VzgzLU9FbHRmcXE5MUFXZGc?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-08-03T10:56:07.000Z",
+      "athleteIds": [
+        "camilla-lupoli"
+      ]
+    },
     {
       "id": "altino-Sito ufficiale-0-2026-08-03T08:40:55.000Z",
       "team": "altino",
@@ -11,7 +42,7 @@
       "image": "https://www.altinovolley.it/wp-content/uploads/2026/08/cami.png"
     },
     {
-      "id": "perugia-official-0-02/08/2026",
+      "id": "perugia-official-1-02/08/2026",
       "team": "perugia",
       "title": "NOTA STAMPA SIR SUSA SCAI PERUGIA del 02/08/2026",
       "url": "https://www.sirsafetyperugia.it/new/nota-stampa-sir-susa-scai-perugia-del-02-08-2026",
@@ -20,13 +51,24 @@
       "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/nota_lutto.jpg"
     },
     {
-      "id": "perugia-official-1-31/07/2026",
+      "id": "perugia-official-2-31/07/2026",
       "team": "perugia",
       "title": "IL CLUB BIANCONERO PUNTA AD ESPANDERE LA CULTURA DELLA PALLAVOLO: TORNANO GLI OPEN DAY!",
       "url": "https://www.sirsafetyperugia.it/new/il-club-bianconero-punta-ad-espandere-la-cultura-della-pallavolo-tornano-gli-open-day",
       "source": "Sito ufficiale",
       "publishedAt": "2026-07-31T12:00:00.000Z",
       "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/ORIZZONTALE_%289%29.png"
+    },
+    {
+      "id": "altino-Ricerca notizie-2-2026-07-30T23:04:29.000Z",
+      "team": "altino",
+      "title": "Ultime partite - Lega Volley Femminile",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE82eE5UZV9WOEx4VFZIejRRY204dmZ1dnNUV1NxdC00OEcxSjBVS09VX1RNejFReElwLWdlUHh0ZW53a1ExVDFWUlNmdlpEUTVCR0s2a2lScThWMUlQWU1FWURUdUMtUFhsMU1mTWYtWXg?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-07-30T23:04:29.000Z",
+      "athleteIds": [
+        "camilla-lupoli"
+      ]
     },
     {
       "id": "perugia-official-2-30/07/2026",
@@ -110,6 +152,29 @@
       "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjU3NyIgdmlld0JveD0iMCAwIDEwMjQgNTc3Ij48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBzdHlsZT0iZmlsbDojY2ZkNGRiO2ZpbGwtb3BhY2l0eTogMC4xOyIvPjwvc3ZnPg=="
     },
     {
+      "id": "perugia-luca-loreti-2026-06-22",
+      "team": "perugia",
+      "title": "Luca Loreti è il secondo libero della Sir Susa Scai: «Pronto a dare sempre il massimo!»",
+      "url": "https://www.sirsafetyperugia.it/new/luca-loreti-e-il-secondo-libero-della-sir-susa-scai-pronto-a-dare-sempre-il-massimo",
+      "source": "Sito ufficiale",
+      "publishedAt": "2026-06-22T12:00:00.000Z",
+      "athleteIds": [
+        "luca-loreti"
+      ],
+      "image": "https://www.sirsafetyperugia.it/assets/img/news/_og/orizzontale_LORETI.png"
+    },
+    {
+      "id": "perugia-Ricerca notizie-4-2026-06-22T07:00:00.000Z",
+      "team": "perugia",
+      "title": "Volley Mercato: Luca Loreti sarà il secondo libero di Perugia - Tuttosport",
+      "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxQQ2VvdmFFdUlFZXRwdVQxQkhLV3NsSlo4aWNRdTY2LWVkQmt3QWppTE9ZUU9lWkZNS1dJQmRnU2xiRG5mS05mUDFOdGIyMDVvdVNBZmdaM09QN3UwVVdlOFZkQVhKT1g5Z0M2cHg4V2tYOXhZTVRjWVdaV1oyRXJiN2lZZWNQUkJ5WXJfVFhDUHNkTjVTNTdqUVpaazhpbE1HNE05eGJ1WVRnVS1aZnVnWWxPSl9GcDNpVGtvdThBd2QyQkszendwY3lWXzY?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-06-22T07:00:00.000Z",
+      "athleteIds": [
+        "luca-loreti"
+      ]
+    },
+    {
       "id": "matese-punto-sport-stadio-2026-06-18",
       "team": "matese",
       "title": "Polisportiva Matese, si chiude il ciclo Scappaticcio: fine di un percorso importante in Serie B2",
@@ -119,12 +184,78 @@
       "image": "https://www.puntosportstadio.it/wp-content/uploads/2026/06/FB_IMG_1781763917257.jpg"
     },
     {
+      "id": "perugia-Ricerca notizie-2-2026-06-09T07:00:00.000Z",
+      "team": "perugia",
+      "title": "Perugia ha puntato sul libero Luca Loreti - Pianeta Volley",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxNT0h1SXZNd21UWkJWUmwzdUdIdFhiNmZOYk03VHZJU0FKSVlaYzhLZWJoS2NKOTB4QTVXZWhNZmVGLTV4VE52N1piQk5kMFQyMHQ2SDhMUXNQN3c2cWIyVG1Iczl3OGNuRTIxUFd4WF90QmJOUUhXUEtlN090Z0d2TURXSFltMXM?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-06-09T07:00:00.000Z",
+      "athleteIds": [
+        "luca-loreti"
+      ]
+    },
+    {
       "id": "matese-guiscards-2026-05-03",
       "team": "matese",
       "title": "Santoro Creative Hub regina dei derby: Matese ko",
       "url": "https://www.guiscards.it/2026/05/03/santoro-creative-hub-regina-dei-derby-matese-ko/",
       "source": "Salerno Guiscards",
       "publishedAt": "2026-05-03T12:00:00.000Z"
+    },
+    {
+      "id": "perugia-Ricerca notizie-0-2026-04-23T07:00:00.000Z",
+      "team": "perugia",
+      "title": "Loreti vince e saluta Piacenza: «Contentissimo del successo in Coppa Cev». VIDEO - SportPiacenza",
+      "url": "https://news.google.com/rss/articles/CBMiygFBVV95cUxQUGhVTGdSTklHNUR0YVhwZndBTk1lc2IzbmUxejdMUTlaS0JVZ0plRjEtVzVQVXNORWtwTHpSOEpOQXV4TENUZ2RQWnZTUGswRHBjdHFZVGExVTNFRWxRNTcwaFhpWEs3aU9jc04tZmEtdXUtbU9HRmpPWWNIM0xqQ2lDWmVZMW1jbkVQdElHZFNDLUU3czAydGhfQUsyTTFicC00cUNJR2NsMG5tY0IxTjBBd3V4MDgtYjhvQVFUQXN2Ml9taHc4MDBn?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-04-23T07:00:00.000Z",
+      "athleteIds": [
+        "luca-loreti"
+      ]
+    },
+    {
+      "id": "perugia-Ricerca notizie-3-2026-03-16T07:00:00.000Z",
+      "team": "perugia",
+      "title": "Luca Loreti ospite della ventunesima puntata di After Hours - IlPiacenza",
+      "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxQNkhCVlRVSkxNN1F4Q1NJbElHQkNJX2p0UWVVTE5oalRjS19xLWo2S3djazQxVFhFZS1fZms3dVdGVllIUnBWem1oVWpSZ05qbG0xc0huMmRXSTdSUEdsSmVNWkhsSG5BdTF5TkhoaXpxZVJkS2VEaUgxVVA2XzNIamlrbl9aN1ZXQmJIRlgyLVRyM3BCanZHTTdpRVdjNVl3cFJ4TGRR?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-03-16T07:00:00.000Z",
+      "athleteIds": [
+        "luca-loreti"
+      ]
+    },
+    {
+      "id": "perugia-Ricerca notizie-1-2026-02-14T08:00:00.000Z",
+      "team": "perugia",
+      "title": "Pallavolo Mercato – Luca Loreti vicino al trasferimento alla Rana Verona? - iVolley Magazine",
+      "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNRHIyR2ZEbndxbE8yYnBsbTZwSFRPMXNZbzBKaC1LWFl6elNsbnVvcm04UHBkeFJOQllKRlZZV1dLcUZCT2hCb2wtRXNlS2RDbVRfcl8xaXlobWFEZmdkc1QxVzJHaXA1Z25XOGhYWk1qcnBSZndzNnRrZ1YxQkdmcUFRUFlYVmpJRTlPQ3JsS3BNSld4cFJudERESXozZVpJQjh4d1Y5NHpxUnpHUktDWFVGOA?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-02-14T08:00:00.000Z",
+      "athleteIds": [
+        "luca-loreti"
+      ]
+    },
+    {
+      "id": "altino-Ricerca notizie-4-2026-01-09T08:00:00.000Z",
+      "team": "altino",
+      "title": "Volley B1 femminile - Il Resto del Carlino",
+      "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQcGR3bG1fbFNuLWJWdldoUDl6Z096VDlyblZfcURYdzZWLXpsb0FtWTdxY3E2clY2SVpsaEF3WDJPRF9TMmx0WnVXdHFEdjB0cjl5empXczQxOE94MWNJREpVSlhNZ1JrQllSbEU2QjhIdkNwR1RDX195M0FFbnBFbFhB?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2026-01-09T08:00:00.000Z",
+      "athleteIds": [
+        "camilla-lupoli"
+      ]
+    },
+    {
+      "id": "altino-Ricerca notizie-0-2025-10-10T07:00:00.000Z",
+      "team": "altino",
+      "title": "Volley Club B1 femminile, Elettromeccanica Angelini al via: domenica in casa con Lupoli al palleggio - CesenaToday",
+      "url": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxNSEVHdzhqc0RoNHowcHBCb2ZRSi1vNlRldU40MUJuSUh4elBjdXdXbWFuaXRPeUtkNWNJX1dXVm5PZFV1dWoyOUlPZG9SaFR6S2JpYmpiN2hnQUp0ckoweTlqN0hhVVFaWTl5M0pmU0hDaERuQkhhSm5MNVBoaFJCVGJXQm1PNFpXSkhXazBEVEphck13NThYSk13UG9HMGNrMm9VeHl3bzgwVEt4Q0FHc2lzNWlMRUUzUXktdktJZlU0ay1MOVRsOTlDZ2pnbVpwX1BDNkhadFV1SE0?oc=5",
+      "source": "Ricerca notizie",
+      "publishedAt": "2025-10-10T07:00:00.000Z",
+      "athleteIds": [
+        "camilla-lupoli"
+      ]
     }
   ]
 }

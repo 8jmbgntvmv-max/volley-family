@@ -104,20 +104,42 @@ const curatedMatese = [
   },
 ]
 
+const curatedAthletes = [
+  {
+    id: 'perugia-luca-loreti-2026-06-22',
+    team: 'perugia',
+    title: 'Luca Loreti è il secondo libero della Sir Susa Scai: «Pronto a dare sempre il massimo!»',
+    url: 'https://www.sirsafetyperugia.it/new/luca-loreti-e-il-secondo-libero-della-sir-susa-scai-pronto-a-dare-sempre-il-massimo',
+    source: 'Sito ufficiale',
+    publishedAt: '2026-06-22T12:00:00.000Z',
+    athleteIds: ['luca-loreti'],
+  },
+]
+
+const athleteSearches = [
+  { id: 'chiara-lupoli', name: 'Chiara Lupoli', team: 'matese' },
+  { id: 'camilla-lupoli', name: 'Camilla Lupoli', team: 'altino' },
+  { id: 'luca-loreti', name: 'Luca Loreti', team: 'perugia' },
+]
+
+const googleNewsFeed = (name) => `https://news.google.com/rss/search?q=${encodeURIComponent(`"${name}" pallavolo`)}&hl=it&gl=IT&ceid=IT:it`
+
 const results = await Promise.allSettled([
   Promise.resolve(curatedMatese),
+  Promise.resolve(curatedAthletes),
   get('https://www.altinovolley.it/feed/').then((xml) => rssItems(xml, 'altino', 'Sito ufficiale').slice(0, 5)),
   get('https://www.sirsafetyperugia.it/new/').then(perugiaItems),
   get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
   get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
   get('https://www.puntosportstadio.it/?feed=rss2').then((xml) => rssItems(xml, 'matese', 'Punto Sport Stadio', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
   get('https://www.volleycloud.it/feed/').then((xml) => rssItems(xml, 'matese', 'VolleyCloud', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
+  ...athleteSearches.map((athlete) => get(googleNewsFeed(athlete.name)).then((xml) => rssItems(xml, athlete.team, 'Ricerca notizie').slice(0, 5).map((item) => ({ ...item, athleteIds: [athlete.id] })))),
 ])
 
 const fresh = results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
 const previous = Array.isArray(fallback.items) ? fallback.items : []
 const deduplicated = mergeNewsItems(fresh, previous)
-const items = await Promise.all(deduplicated.map(async (item) => item.image ? item : { ...item, image: await articleImage(item.url) }))
+const items = await Promise.all(deduplicated.map(async (item) => item.image || item.source === 'Ricerca notizie' ? item : { ...item, image: await articleImage(item.url) }))
 
 await writeFile(outputUrl, `${JSON.stringify({ updatedAt: new Date().toISOString(), items }, null, 2)}\n`)
 console.log(`News aggiornate: ${items.length}`)

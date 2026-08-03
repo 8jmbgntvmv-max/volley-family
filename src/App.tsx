@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { groupByWeekend } from './lib/decision.mjs'
+import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 
 type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'rules'
-type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string }
+type AthleteId = 'chiara-lupoli' | 'camilla-lupoli' | 'luca-loreti'
+type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[] }
 type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[] }
 type ResultsByMatch = Record<string, MatchResult>
 const nav: { id: Screen; label: string; icon: string }[] = [
@@ -17,6 +19,11 @@ const sources = {
   matese: { instagram: 'https://www.instagram.com/polisportivamatese/', facebook: 'https://www.facebook.com/polisportiva.matese' },
   perugia: { site: 'https://www.sirsafetyperugia.it/new/', instagram: 'https://www.instagram.com/sirsafetyperugia/', facebook: 'https://www.facebook.com/SirSafetyPerugiaVolley/', youtube: 'https://www.youtube.com/channel/UCaqDD5gvrybIDsgltOQdzog/' },
 }
+const athletes: { id: AthleteId; name: string; team: TeamId }[] = [
+  { id: 'chiara-lupoli', name: 'Chiara Lupoli', team: 'matese' },
+  { id: 'camilla-lupoli', name: 'Camilla Lupoli', team: 'altino' },
+  { id: 'luca-loreti', name: 'Luca Loreti', team: 'perugia' },
+]
 const longDate = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })
 const dateLabel = (value: string) => longDate.format(new Date(`${value}T12:00:00`))
 const scoreLabel = (result: MatchResult) => `${result.firstTeamSets}–${result.secondTeamSets}`
@@ -24,10 +31,12 @@ const setsLabel = (result: MatchResult) => result.sets.map((set) => `${set.first
 
 function MatchRow({ match, result }: { match: Match; result?: MatchResult }) {
   const team = teams.find((item) => item.id === match.team)!
+  const mapsUrl = googleMapsDirectionsUrl(match.venue)
   return <article className="match-row">
     <span className="team-dot" style={{ background: team.color }} />
     <div className="match-copy"><strong>{team.shortName} · {match.home ? 'Casa' : 'Trasferta'}</strong><span>{match.home ? `${team.shortName} – ${match.opponent}` : `${match.opponent} – ${team.shortName}`}</span></div>
     <div className={`match-meta ${result?.played ? 'has-result' : ''}`}><strong>{result?.played ? scoreLabel(result) : match.time ?? 'Orario da definire'}</strong><span>{result?.played ? `Ufficiale FIPAV${setsLabel(result) ? ` · ${setsLabel(result)}` : ''}` : `${match.venue ?? match.competition}${match.matchNumber ? ` · gara ${match.matchNumber}` : ''}`}</span></div>
+    {mapsUrl && <a className="maps-link" href={mapsUrl} target="_blank" rel="noreferrer" aria-label={`Avvia Google Maps verso ${match.venue}`}>Indicazioni</a>}
   </article>
 }
 
@@ -36,10 +45,11 @@ function ComparisonCell({ teamId, weekMatches, results }: { teamId: TeamId; week
   const teamMatches = weekMatches.filter((match) => match.team === teamId)
   return <div className="compare-column">
     <div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div>
-    {teamMatches.length ? teamMatches.map((match) => { const result = match.matchNumber ? results[match.matchNumber] : undefined; return <div className={`compare-match ${match.home ? 'home' : 'away'}`} key={match.id}>
+    {teamMatches.length ? teamMatches.map((match) => { const result = match.matchNumber ? results[match.matchNumber] : undefined; const mapsUrl = googleMapsDirectionsUrl(match.venue); return <div className={`compare-match ${match.home ? 'home' : 'away'}`} key={match.id}>
       <span className="where">{match.home ? 'IN CASA' : 'TRASFERTA'}</span>
       <div className="compare-opponent"><strong>{match.opponent}</strong>{result?.played && <b>{scoreLabel(result)}</b>}</div>
       <small>{dateLabel(match.date)} · {result?.played ? `finale FIPAV${setsLabel(result) ? ` · ${setsLabel(result)}` : ''}` : `${match.time ?? 'orario da definire'}${match.venue ? ` · ${match.venue}` : ''}`}</small>
+      {mapsUrl && <a className="maps-link compact" href={mapsUrl} target="_blank" rel="noreferrer" aria-label={`Avvia Google Maps verso ${match.venue}`}>Apri Google Maps</a>}
     </div> }) : <div className="compare-empty">{team.status === 'pending' ? 'Calendario in attesa' : 'Non gioca'}</div>}
   </div>
 }
@@ -50,6 +60,21 @@ function NewsCard({ item }: { item: NewsItem }) {
     <div className="news-preview" style={{ background: `linear-gradient(145deg, ${team.color}, ${team.softColor})` }}><span>{team.code}</span>{item.image && <img src={item.image} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none' }} />}</div>
     <div className="news-card-copy"><span className="news-source"><i style={{ background: team.color }} />{team.shortName} · {item.source}</span><strong>{item.title}</strong><time>{dateLabel(item.publishedAt.slice(0, 10))}</time></div>
   </a>
+}
+
+function AthleteFocus({ news }: { news: NewsItem[] }) {
+  return <section className="athlete-focus" aria-labelledby="athlete-focus-title">
+    <div className="athlete-focus-heading"><div><p className="eyebrow">Osservatorio personale</p><h3 id="athlete-focus-title">I nostri atleti</h3></div><span>Ricerca automatica</span></div>
+    <p className="athlete-focus-note">Citazioni trovate nelle fonti web pubbliche e nei canali ufficiali accessibili. Ogni notizia apre la fonte originale.</p>
+    <div className="athlete-grid">{athletes.map((athlete) => {
+      const team = teams.find((candidate) => candidate.id === athlete.team)!
+      const mentions = news.filter((item) => item.athleteIds?.includes(athlete.id) || item.title.toLocaleLowerCase('it').includes(athlete.name.toLocaleLowerCase('it'))).slice(0, 3)
+      return <article className="athlete-card" key={athlete.id}>
+        <div className="athlete-card-heading"><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><strong>{athlete.name}</strong><small>{team.shortName}</small></div></div>
+        {mentions.length ? <div className="athlete-links">{mentions.map((item) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id}><span>{item.source}</span>{item.title}</a>)}</div> : <p>Nessuna nuova citazione pubblica trovata. Il controllo automatico resta attivo.</p>}
+      </article>
+    })}</div>
+  </section>
 }
 
 function App() {
@@ -75,7 +100,7 @@ function App() {
       </>}
       {screen === 'agenda' && <section className="page"><p className="eyebrow">Agenda settimanale</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza graduatorie o suggerimenti. I risultati ufficiali FIPAV di Matese vengono aggiornati automaticamente.</p><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
       {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div>{team.id === 'matese' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali FIPAV nazionale, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{matches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={match.matchNumber ? results[match.matchNumber] : undefined} /></div>)}</section>)}</section>}
-      {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
+      {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div></section>}
     </main>
     <nav className="bottom-nav" aria-label="Navigazione principale">{nav.map((item) => <button key={item.id} className={screen === item.id ? 'active' : ''} onClick={() => setScreen(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav>
