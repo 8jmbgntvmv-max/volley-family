@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import './App.css'
 import './AthleteMedia.css'
 import './LiveStreams.css'
@@ -6,13 +6,13 @@ import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
 import { buildUpdateItems, unreadUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
-import { familyChatService } from './lib/family-chat.mjs'
+import { createFamilyBoardClient, validateFamilyBoardPost, type FamilyBoardKind, type FamilyBoardMessage } from './lib/family-board.mjs'
 import { athleteMediaLinks } from './lib/athlete-media.mjs'
 import { youtubeLiveUrl } from './lib/live-streams.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
-type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'rules' | 'updates'
+type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'board' | 'rules' | 'updates'
 type AthleteId = 'chiara-lupoli' | 'camilla-lupoli' | 'luca-loreti'
 type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[]; summary?: string; matchFocus?: MatchFocus }
 type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[]; sourceUpdatedAt?: string }
@@ -26,7 +26,7 @@ const defaultUpdatePreferences: UpdatePreferences = { news: true, results: true,
 const nav: { id: Screen; label: string; icon: string }[] = [
   { id: 'home', label: 'Home', icon: '⌂' }, { id: 'agenda', label: 'Confronto', icon: '▦' },
   { id: 'teams', label: 'Squadre', icon: '●' }, { id: 'news', label: 'News', icon: '◉' },
-  { id: 'rules', label: 'Regole', icon: '✓' },
+  { id: 'board', label: 'Bacheca', icon: '✎' },
 ]
 const sources = {
   altino: { site: 'https://www.altinovolley.it/', instagram: 'https://www.instagram.com/altinovolley.official/', facebook: 'https://www.facebook.com/altinovolley/', youtube: 'https://www.youtube.com/@asdaltinovolley' },
@@ -39,6 +39,7 @@ const athletes: { id: AthleteId; name: string; team: TeamId }[] = [
   { id: 'luca-loreti', name: 'Luca Loreti', team: 'perugia' },
 ]
 const longDate = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })
+const boardDate = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 const dateLabel = (value: string) => longDate.format(new Date(`${value}T12:00:00`))
 const scoreLabel = (result: MatchResult) => `${result.firstTeamSets}–${result.secondTeamSets}`
 const setsLabel = (result: MatchResult) => result.sets.map((set) => `${set.first}-${set.second}`).join(', ')
@@ -198,34 +199,116 @@ function UpdateRow({ item, unread, onRead, onOpenResults }: { item: UpdateItem; 
     : <button className={`update-row ${unread ? 'unread' : ''}`} onClick={() => { onRead(item.id); onOpenResults() }}>{content}</button>
 }
 
-function UpdatesCenter({ updates, seenIds, preferences, chatUrl, onPreferences, onMarkRead, onMarkAll, onSaveChat, onOpenResults }: {
+function UpdatesCenter({ updates, seenIds, preferences, onPreferences, onMarkRead, onMarkAll, onOpenResults }: {
   updates: UpdateItem[]
   seenIds: Set<string>
   preferences: UpdatePreferences
-  chatUrl: string
   onPreferences: (preferences: UpdatePreferences) => void
   onMarkRead: (id: string) => void
   onMarkAll: () => void
-  onSaveChat: (url: string) => void
   onOpenResults: () => void
 }) {
-  const [chatDraft, setChatDraft] = useState(chatUrl)
-  const [chatError, setChatError] = useState('')
-  const chatService = familyChatService(chatUrl)
   const pendingUpdates = unreadUpdateItems(updates, seenIds)
   const unreadCount = pendingUpdates.length
   const toggleKind = (kind: UpdateKind) => onPreferences({ ...preferences, [kind]: !preferences[kind] })
   const toggleTeam = (team: TeamId) => onPreferences({ ...preferences, teams: { ...preferences.teams, [team]: !preferences.teams[team] } })
-  const saveChat = () => {
-    const value = chatDraft.trim()
-    if (value && !familyChatService(value)) { setChatError('Inserisci un link valido di WhatsApp, Telegram o Signal.'); return }
-    setChatError('')
-    onSaveChat(value)
-  }
   return <section className="page updates-page"><p className="eyebrow">Controllo aggiornamenti</p><div className="updates-page-heading"><div><h2>Novità</h2><p>{unreadCount ? `${unreadCount} da leggere` : 'Sei in pari con gli aggiornamenti'}</p></div>{unreadCount > 0 && <button onClick={onMarkAll}>Segna tutto come letto</button>}</div>
     <article className="updates-settings"><details><summary><div><strong>Cosa vuoi seguire</strong><small>Le preferenze restano salvate su questo telefono</small></div><b>＋</b></summary><div className="preference-group"><span>Tipologia</span><div>{(Object.keys(updateKindLabels) as UpdateKind[]).map((kind) => <label key={kind}><input type="checkbox" checked={preferences[kind]} onChange={() => toggleKind(kind)} />{updateKindLabels[kind]}</label>)}</div></div><div className="preference-group"><span>Squadre</span><div>{teams.map((team) => <label key={team.id}><input type="checkbox" checked={preferences.teams[team.id]} onChange={() => toggleTeam(team.id)} />{team.shortName}</label>)}</div></div></details></article>
-    <article className="family-chat-card"><div className="chat-card-heading"><span>{chatService === 'WhatsApp' ? 'WA' : chatService === 'Telegram' ? 'TG' : chatService === 'Signal' ? 'SG' : 'CHAT'}</span><div><strong>Chat famiglia</strong><small>{chatService ? `Apri il gruppo su ${chatService}` : 'Puoi scegliere WhatsApp, Telegram o Signal'}</small></div>{chatUrl && <a href={chatUrl} target="_blank" rel="noreferrer">Apri</a>}</div><label htmlFor="family-chat-link">Link d’invito del gruppo</label><div className="chat-link-form"><input id="family-chat-link" type="url" value={chatDraft} onChange={(event) => setChatDraft(event.target.value)} placeholder="WhatsApp, Telegram o Signal" /><button onClick={saveChat}>Salva</button></div>{chatError && <p className="chat-error">{chatError}</p>}<p>Il collegamento resta soltanto su questo dispositivo e non viene pubblicato su GitHub.</p></article>
     <div className="updates-list">{pendingUpdates.slice(0, 60).map((item) => <UpdateRow key={item.id} item={item} unread onRead={onMarkRead} onOpenResults={onOpenResults} />)}{pendingUpdates.length === 0 && <div className="detail-empty"><strong>Nessun nuovo aggiornamento</strong><span>Le notizie già lette restano disponibili nella sezione News.</span></div>}</div>
+  </section>
+}
+
+const boardKindLabels: Record<FamilyBoardKind, string> = { partita: 'Partita', squadra: 'Squadra', logistica: 'Logistica', altro: 'Altro' }
+
+function matchBoardLabel(match: Match) {
+  const team = teams.find((candidate) => candidate.id === match.team)!
+  return `${dateLabel(match.date)} · ${team.shortName}–${match.opponent}`
+}
+
+function HomeFamilyBoard({ onOpen }: { onOpen: () => void }) {
+  return <section className="home-dashboard family-board-preview" aria-labelledby="family-board-preview-title"><div className="dashboard-heading"><div><p className="eyebrow">Spazio condiviso</p><h2 id="family-board-preview-title">Bacheca familiare</h2></div><button className="text-button" onClick={onOpen}>Apri</button></div><p className="dashboard-note">Scrivi quale partita seguirai oppure condividi una novità con tutta la famiglia.</p><button className="board-cta" onClick={onOpen}>Scrivi in bacheca</button></section>
+}
+
+function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout }: {
+  client: ReturnType<typeof createFamilyBoardClient>
+  suggestedCode: string
+  onCodeConsumed: () => void
+  onLogout: () => void
+}) {
+  const [messages, setMessages] = useState<FamilyBoardMessage[]>([])
+  const [joined, setJoined] = useState(false)
+  const [loading, setLoading] = useState(client.configured)
+  const [error, setError] = useState('')
+  const [displayName, setDisplayName] = useState(() => localStorage.getItem('vf-family-display-name-v1') ?? '')
+  const [familyCode, setFamilyCode] = useState(suggestedCode)
+  const [content, setContent] = useState('')
+  const [kind, setKind] = useState<FamilyBoardKind>('partita')
+  const [matchId, setMatchId] = useState('')
+  const [sending, setSending] = useState(false)
+  const futureMatches = useMemo(() => matches.filter((match) => match.date >= new Date().toISOString().slice(0, 10)).slice(0, 30), [])
+
+  const refresh = useCallback(async () => {
+    if (!client.configured) return
+    try {
+      const next = await client.list()
+      setMessages(next)
+      setJoined(true)
+      setError('')
+    } catch (reason) {
+      if (reason instanceof Error && reason.message === 'VF_NOT_MEMBER') setJoined(false)
+      else setError(reason instanceof Error ? reason.message : 'La bacheca non è raggiungibile in questo momento.')
+    } finally { setLoading(false) }
+  }, [client])
+
+  useEffect(() => {
+    void refresh()
+    const timer = window.setInterval(refresh, 30_000)
+    return () => window.clearInterval(timer)
+  }, [refresh])
+
+  const join = async (event: FormEvent) => {
+    event.preventDefault()
+    if (displayName.trim().length < 2) { setError('Inserisci il tuo nome.'); return }
+    if (!familyCode.trim()) { setError('Inserisci il codice famiglia.'); return }
+    setLoading(true)
+    try {
+      await client.join(familyCode, displayName)
+      localStorage.setItem('vf-family-display-name-v1', displayName.trim())
+      setFamilyCode('')
+      onCodeConsumed()
+      await refresh()
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Non riesco ad attivare la bacheca.'); setLoading(false) }
+  }
+
+  const publish = async (event: FormEvent) => {
+    event.preventDefault()
+    const checked = validateFamilyBoardPost(content)
+    if (!checked.valid) { setError(checked.error); return }
+    setSending(true)
+    try {
+      await client.post({ content: checked.content, kind, matchId: kind === 'partita' ? matchId : null })
+      setContent('')
+      setError('')
+      await refresh()
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Il messaggio non è stato pubblicato.') }
+    finally { setSending(false) }
+  }
+
+  const remove = async (message: FamilyBoardMessage) => {
+    if (!window.confirm('Vuoi eliminare questo messaggio dalla bacheca?')) return
+    try { await client.remove(message.id); await refresh() }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'Il messaggio non è stato eliminato.') }
+  }
+
+  return <section className="page family-board-page"><p className="eyebrow">Spazio della famiglia</p><h2>Bacheca familiare</h2><p className="page-intro">Tutti i membri invitati possono scrivere e leggere gli aggiornamenti.</p>
+    {!client.configured ? <article className="board-status"><strong>Collegamento in preparazione</strong><p>L’interfaccia è pronta. Per condividere davvero i messaggi fra i telefoni manca soltanto l’attivazione dell’archivio familiare online.</p></article>
+      : loading && !joined ? <div className="board-loading">Controllo della bacheca…</div>
+        : !joined ? <form className="board-join" onSubmit={join}><strong>Attiva la bacheca su questo telefono</strong><p>Scegli il nome che vedranno gli altri familiari e inserisci il codice famiglia.</p><label htmlFor="board-name">Il tuo nome</label><input id="board-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={40} autoComplete="name" /><label htmlFor="board-code">Codice famiglia</label><input id="board-code" value={familyCode} onChange={(event) => setFamilyCode(event.target.value)} autoComplete="one-time-code" /><button disabled={loading}>Entra nella bacheca</button></form>
+          : <><form className="board-compose" onSubmit={publish}><div className="board-compose-heading"><strong>Nuovo messaggio</strong><span>{content.length}/500</span></div><div className="board-kind-row">{(Object.keys(boardKindLabels) as FamilyBoardKind[]).map((value) => <button type="button" className={kind === value ? 'active' : ''} onClick={() => setKind(value)} key={value}>{boardKindLabels[value]}</button>)}</div>{kind === 'partita' && <label className="board-match-select">Partita collegata<select value={matchId} onChange={(event) => setMatchId(event.target.value)}><option value="">Nessuna partita specifica</option>{futureMatches.map((match) => <option value={match.id} key={match.id}>{matchBoardLabel(match)}</option>)}</select></label>}<textarea value={content} onChange={(event) => setContent(event.target.value)} maxLength={500} rows={4} placeholder={kind === 'partita' ? 'Es. Io seguirò Matese sabato…' : 'Scrivi un aggiornamento per la famiglia…'} /><button className="board-publish" disabled={sending}>{sending ? 'Pubblicazione…' : 'Pubblica per tutti'}</button></form>
+            {error && <div className="board-error">{error}</div>}
+            <div className="board-list">{messages.map((message) => { const linkedMatch = matches.find((match) => match.id === message.matchId); return <article className="board-message" key={message.id}><header><span>{message.authorName.slice(0, 1).toUpperCase()}</span><div><strong>{message.authorName}</strong><small>{boardKindLabels[message.kind]} · {boardDate.format(new Date(message.createdAt))}</small></div>{message.ownedByMe && <button onClick={() => remove(message)}>Elimina</button>}</header><p>{message.content}</p>{linkedMatch && <div className="board-linked-match">{matchBoardLabel(linkedMatch)}</div>}</article> })}{!messages.length && <div className="detail-empty"><strong>La bacheca è ancora vuota</strong><span>Scrivi il primo messaggio per la famiglia.</span></div>}</div></>}
+    {client.configured && !loading && !joined && error && <div className="board-error">{error}</div>}
+    <button className="logout-button" onClick={onLogout}>Rimuovi l’accesso da questo telefono</button>
   </section>
 }
 
@@ -280,13 +363,14 @@ function App() {
   const [dataReady, setDataReady] = useState(false)
   const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'locked'>('checking')
   const [inviteError, setInviteError] = useState(false)
+  const [boardInviteCode, setBoardInviteCode] = useState(() => sessionStorage.getItem('vf-family-board-invite-v1') ?? '')
   const [seenIds, setSeenIds] = useState<Set<string>>(() => new Set(readStoredJson<string[]>('vf-seen-updates-v1', [])))
   const [updatesInitialized, setUpdatesInitialized] = useState(() => localStorage.getItem('vf-updates-ready-v1') === '1')
   const [preferences, setPreferences] = useState<UpdatePreferences>(() => {
     const stored = readStoredJson<Partial<UpdatePreferences>>('vf-update-preferences-v1', {})
     return { ...defaultUpdatePreferences, ...stored, teams: { ...defaultUpdatePreferences.teams, ...(stored.teams ?? {}) } }
   })
-  const [chatUrl, setChatUrl] = useState(() => localStorage.getItem('vf-family-chat-link-v1') ?? localStorage.getItem('vf-whatsapp-group-v1') ?? '')
+  const boardClient = useMemo(() => createFamilyBoardClient({ url: import.meta.env.VITE_SUPABASE_URL, anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY }), [])
   const weekends = useMemo(() => groupByWeekend(matches), [])
   const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
   const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
@@ -294,13 +378,20 @@ function App() {
 
   useEffect(() => {
     const checkAccess = async () => {
-      if (localStorage.getItem('vf-family-access-v1') === 'granted') { setAccessStatus('granted'); return }
       const url = new URL(window.location.href)
       const invite = url.searchParams.get('invite')
-      if (!invite) { setAccessStatus('locked'); return }
-      url.searchParams.delete('invite')
-      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
-      if (await sha256(invite) === familyInviteHash) { localStorage.setItem('vf-family-access-v1', 'granted'); setAccessStatus('granted') } else { setInviteError(true); setAccessStatus('locked') }
+      if (invite) {
+        url.searchParams.delete('invite')
+        window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+        if (await sha256(invite) === familyInviteHash) {
+          localStorage.setItem('vf-family-access-v1', 'granted')
+          sessionStorage.setItem('vf-family-board-invite-v1', invite)
+          setBoardInviteCode(invite)
+          setAccessStatus('granted')
+        } else { setInviteError(true); setAccessStatus('locked') }
+        return
+      }
+      setAccessStatus(localStorage.getItem('vf-family-access-v1') === 'granted' ? 'granted' : 'locked')
     }
     void checkAccess()
   }, [])
@@ -344,6 +435,8 @@ function App() {
   const unlock = async (code: string) => {
     if (await sha256(code) !== familyInviteHash) return false
     localStorage.setItem('vf-family-access-v1', 'granted')
+    sessionStorage.setItem('vf-family-board-invite-v1', code.trim())
+    setBoardInviteCode(code.trim())
     setAccessStatus('granted')
     setInviteError(false)
     return true
@@ -358,13 +451,16 @@ function App() {
     localStorage.setItem('vf-seen-updates-v1', JSON.stringify([...next].slice(-500)))
     return next
   })
-  const saveChatUrl = (url: string) => {
-    setChatUrl(url)
-    if (url) localStorage.setItem('vf-family-chat-link-v1', url)
-    else localStorage.removeItem('vf-family-chat-link-v1')
-    localStorage.removeItem('vf-whatsapp-group-v1')
+  const consumeBoardInvite = () => { sessionStorage.removeItem('vf-family-board-invite-v1'); setBoardInviteCode('') }
+  const logout = () => {
+    localStorage.removeItem('vf-family-access-v1')
+    localStorage.removeItem('vf-family-display-name-v1')
+    sessionStorage.removeItem('vf-family-board-invite-v1')
+    boardClient.clearSession()
+    setBoardInviteCode('')
+    setAccessStatus('locked')
+    setScreen('home')
   }
-  const logout = () => { localStorage.removeItem('vf-family-access-v1'); setAccessStatus('locked'); setScreen('home') }
 
   if (accessStatus !== 'granted') return <FamilyAccessGate checking={accessStatus === 'checking'} inviteError={inviteError} onUnlock={unlock} />
   return <div className="app-shell">
@@ -373,6 +469,7 @@ function App() {
       {screen === 'home' && <>
         <section className="hero-card"><p className="eyebrow light">Agenda condivisa</p><h2>Tutte le partite, senza suggerimenti</h2><p>Consulta liberamente gare in casa e trasferte di Altino, Matese e Perugia.</p><button onClick={() => setScreen('agenda')}>Apri i calendari</button></section>
         <HomeUpdatesBanner count={unreadUpdates.length} onOpen={() => setScreen('updates')} />
+        <HomeFamilyBoard onOpen={() => setScreen('board')} />
         <HomeLiveStreams />
         <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
         <HomeRosters onSelectAthlete={setSelectedAthlete} />
@@ -386,7 +483,8 @@ function App() {
       {screen === 'agenda' && <section className="page"><p className="eyebrow">Agenda settimanale</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza graduatorie o suggerimenti. I risultati ufficiali FIPAV di Matese vengono aggiornati automaticamente.</p><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
       {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div>{team.id === 'matese' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali FIPAV nazionale, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{matches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={match.matchNumber ? results[match.matchNumber] : undefined} /></div>)}</section>)}</section>}
       {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
-      {screen === 'updates' && <UpdatesCenter updates={visibleUpdates} seenIds={seenIds} preferences={preferences} chatUrl={chatUrl} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onSaveChat={saveChatUrl} onOpenResults={() => setScreen('agenda')} />}
+      {screen === 'updates' && <UpdatesCenter updates={visibleUpdates} seenIds={seenIds} preferences={preferences} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onOpenResults={() => setScreen('agenda')} />}
+      {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} />}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}
     </main>
     {selectedAthlete && <AthleteDetail selected={selectedAthlete} news={news} leagueData={leagueData} onClose={() => setSelectedAthlete(null)} />}
