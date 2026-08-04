@@ -70,6 +70,19 @@ function perugiaItems(html) {
   }).filter((item) => item.title && item.url)
 }
 
+function altinoItems(json) {
+  const posts = JSON.parse(json)
+  return posts.map((post, index) => ({
+    id: `altino-official-${index}-${post.date_gmt}`,
+    team: 'altino',
+    title: decode(post.title?.rendered),
+    url: post.link,
+    source: 'Sito ufficiale',
+    publishedAt: new Date(`${post.date_gmt}Z`).toISOString(),
+    summary: decode(post.excerpt?.rendered).slice(0, 360) || undefined,
+  })).filter((item) => item.title && item.url)
+}
+
 async function articleDetails(url) {
   try {
     const html = await get(url)
@@ -129,7 +142,7 @@ const googleNewsFeed = (name) => `https://news.google.com/rss/search?q=${encodeU
 const results = await Promise.allSettled([
   Promise.resolve(curatedMatese),
   Promise.resolve(curatedAthletes),
-  get('https://www.altinovolley.it/feed/').then((xml) => rssItems(xml, 'altino', 'Sito ufficiale').slice(0, 5)),
+  get('https://www.altinovolley.it/wp-json/wp/v2/posts?per_page=20&_fields=date_gmt,link,title,excerpt').then(altinoItems),
   get('https://www.sirsafetyperugia.it/new/').then(perugiaItems),
   get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
   get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),

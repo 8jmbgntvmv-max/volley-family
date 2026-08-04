@@ -8,6 +8,7 @@ import { mergeNewsItems } from '../src/lib/news-items.mjs'
 import { googleMapsDirectionsUrl } from '../src/lib/maps.mjs'
 import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
+import { parseLfvPlayerStats } from '../src/lib/league-stats.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -86,4 +87,21 @@ test('aggiorna periodicamente i dati dalle Leghe ufficiali A1 e A2', async () =>
   assert.match(leagueData, /legavolleyfemminile\.it/)
   assert.match(leagueData, /legavolley\.it/)
   assert.match(leagueData, /federvolley\.it/)
+})
+test('completa il roster Altino e rende apribile ogni atleta', async () => {
+  const [roster, app] = await Promise.all([
+    readFile(new URL('../src/data/rosters.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
+  ])
+  const altinoBlock = roster.match(/team: 'altino'[\s\S]*?\n  },/)?.[0] ?? ''
+  assert.equal((altinoBlock.match(/name: '/g) ?? []).length, 13)
+  for (const name of ['Adji Astou Ndoye', 'Gaia Farelli', 'Martina Ferrara', 'Sara Stival', 'Amelie Joyce Pixner', 'Ilaria Maiezza', 'Florencia Ferraro', 'Valentina Omonoyan', 'Gaia Riva', 'Claudia Provaroni', 'Sara Mori', 'Giorgia Bernasconi', 'Camilla Lupoli']) assert.match(altinoBlock, new RegExp(name))
+  assert.match(app, /onSelectAthlete/)
+  assert.match(app, /Statistiche personali/)
+  assert.match(app, /Stampa e articoli/)
+  assert.match(app, /Social ufficiali della squadra/)
+})
+test('estrae le statistiche personali dalla tabella ufficiale della Lega femminile', () => {
+  const html = '<h2>Top atlete</h2><table><tbody><tr><td>1</td><td></td><td><a href="/player/player/CAM-LUP-03/">Camilla Lupoli</a></td><td>4</td><td>12</td><td>8</td><td>5</td><td>62,5%</td><td>20</td><td>3</td><td>2</td><td>1</td><td>7</td></tr></tbody></table>'
+  assert.deepEqual(parseLfvPlayerStats(html), [{ name: 'Camilla Lupoli', profileUrl: 'https://www.legavolleyfemminile.it/player/player/CAM-LUP-03/', appearances: 4, points: 12, attacks: 8, attackPoints: 5, attackPercentage: 62.5, serves: 20, aces: 3, blocks: 2, serveErrors: 1, perfectReceptions: 7 }])
 })

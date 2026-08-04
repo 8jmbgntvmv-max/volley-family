@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises'
+import { parseLfvPlayerStats } from '../src/lib/league-stats.mjs'
 
 const outputUrl = new URL('../public/league-data.json', import.meta.url)
 const fallback = JSON.parse(await readFile(outputUrl, 'utf8'))
@@ -28,7 +29,8 @@ async function altinoData() {
   const standingRow = [...standingsHtml.matchAll(/<tr(?:\s[^>]*)?>([\s\S]*?)<\/tr>/gi)].find((match) => /Tenaglia Altino Avastese Volley/i.test(match[1]) && /cella-(?:posizione|punti|vinte|perse)/i.test(match[1]))?.[1]
   const standingValues = standingRow ? cells(standingRow) : []
   const standing = stats?.played && standingValues.length ? { raw: standingValues } : null
-  return { ...fallback.teams.altino, standing, stats }
+  const players = parseLfvPlayerStats(statsHtml)
+  return { ...fallback.teams.altino, standing, stats, players }
 }
 
 async function perugiaData() {
@@ -40,7 +42,7 @@ async function perugiaData() {
   const played = numeric[1] ?? 0
   const standing = played ? { position: number(values[0].match(/^\d+/)?.[0]), points: numeric[0], played, wins: numeric[2], losses: numeric[3], setsWon: numeric[10], setsLost: numeric[11] } : null
   const stats = /Nessun dato disponibile per la selezione effettuata/i.test(statsHtml) ? null : { officialPageAvailable: true }
-  return { ...fallback.teams.perugia, standing, stats }
+  return { ...fallback.teams.perugia, standing, stats, players: fallback.teams.perugia.players ?? [] }
 }
 
 const [altino, perugia] = await Promise.allSettled([altinoData(), perugiaData()])

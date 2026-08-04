@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-03T21:32:35.163Z",
+  "updatedAt": "2026-08-04T10:25:52.302Z",
   "teams": {
     "altino": {
       "source": "Lega Volley Femminile",
@@ -17,7 +17,8 @@
         "setsPlayed": null,
         "setsWon": null,
         "setsLost": null
-      }
+      },
+      "players": []
     },
     "perugia": {
       "source": "Lega Pallavolo Serie A",
@@ -28,7 +29,8 @@
         "statistics": "https://www.legavolley.it/statistiche/?TipoStat=1.1&Squadra=BASTIA&AnnoInizio=2026"
       },
       "standing": null,
-      "stats": null
+      "stats": null,
+      "players": []
     },
     "matese": {
       "source": "FIPAV nazionale",
@@ -37,7 +39,8 @@
         "results": "https://www.federvolley.it/serie-b2-femminile-calendario"
       },
       "standing": null,
-      "stats": null
+      "stats": null,
+      "players": []
     }
   }
 }

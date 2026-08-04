@@ -1,17 +1,35 @@
 import type { TeamId } from './schedule'
 
-export type RosterPlayer = { name: string; role?: string; followed?: boolean }
+export type RosterPlayer = {
+  name: string
+  role?: string
+  followed?: boolean
+  birthDate?: string
+  birthYear?: string
+  height?: number
+  nationality?: string
+  profileUrl?: string
+  profileSource?: string
+}
 export type Roster = { team: TeamId; status: 'complete' | 'updating'; sourceUrl: string; sourceLabel: string; players: RosterPlayer[] }
 
 export const rosters: Roster[] = [
   {
-    team: 'altino', status: 'updating', sourceUrl: 'https://www.altinovolley.it/', sourceLabel: 'Annunci ufficiali Altino',
+    team: 'altino', status: 'complete', sourceUrl: 'https://www.facebook.com/altinovolley/', sourceLabel: '13 atlete presentate da Altino',
     players: [
-      { name: 'Camilla Lupoli', role: 'Palleggiatrice', followed: true },
-      { name: 'Giorgia Bernasconi', role: 'Centrale' },
-      { name: 'Sara Mori', role: 'Centrale' },
-      { name: 'Claudia Provaroni', role: 'Schiacciatrice' },
-      { name: 'Gaia Riva', role: 'Schiacciatrice' },
+      { name: 'Adji Astou Ndoye', role: 'Schiacciatrice', birthDate: '3 aprile 2006', height: 180, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/adji-ndoye-ancora-in-rossoblu-si-apre-la-terza-stagione-insieme/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Gaia Farelli', role: 'Schiacciatrice', birthDate: '31 agosto 2006', height: 186, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/gaia-farelli-confermata-continuita-e-giovane-energia-per-il-roster-rossoblu/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Martina Ferrara', role: 'Libero', birthDate: '28 gennaio 1999', height: 168, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/primo-colpo-di-mercato-in-rossoblu-martina-ferrara-e-il-nuovo-libero/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Sara Stival', role: 'Opposto', birthDate: '27 marzo 2001', height: 182, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/qualita-ed-energia-in-posto-2-arriva-sara-stival/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Amelie Joyce Pixner', role: 'Centrale', birthDate: '29 novembre 2006', height: 188, nationality: 'Austria', profileUrl: 'https://www.altinovolley.it/gioventu-e-prospettiva-al-centro-arriva-amelie-pixner/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Ilaria Maiezza', role: 'Libero', birthDate: '19 febbraio 2006', height: 175, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/ilaria-maiezza-giovane-talento-abruzzese-per-la-seconda-linea-rossoblu/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Florencia Ferraro', role: 'Palleggiatrice', birthDate: '22 luglio 2003', height: 170, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/florencia-ferraro-in-cabina-di-regia-nuovo-innesto-per-il-palleggio-rossoblu/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Valentina Omonoyan', role: 'Opposto', birthDate: '8 febbraio 2005', height: 178, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/valentina-omonoyan-fisicita-e-margini-di-crescita-per-lattacco-rossoblu/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Gaia Riva', role: 'Schiacciatrice', birthDate: '17 agosto 2000', height: 178, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/determinazione-in-banda-gaia-riva-e-rossoblu/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Claudia Provaroni', role: 'Schiacciatrice', birthDate: '14 maggio 1998', height: 181, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/qualita-ed-esperienza-in-banda-arriva-claudia-provaroni/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Sara Mori', role: 'Centrale', birthYear: '2008', nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/sara-mori-giovane-prospettiva-al-centro-per-il-roster-rossoblu/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Giorgia Bernasconi', role: 'Centrale', birthDate: '16 settembre 2001', height: 184, nationality: 'Italia', profileUrl: 'https://www.altinovolley.it/giorgia-bernasconi-intensita-e-presenza-per-il-centro-rossoblu/', profileSource: 'Presentazione ufficiale Altino' },
+      { name: 'Camilla Lupoli', role: 'Palleggiatrice', birthYear: '2003', height: 175, nationality: 'Italia', followed: true, profileUrl: 'https://www.altinovolley.it/camilla-lupoli-in-rossoblu-talento-e-ritmo-al-palleggio/', profileSource: 'Presentazione ufficiale Altino' },
     ],
   },
   {
