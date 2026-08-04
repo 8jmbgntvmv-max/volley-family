@@ -10,6 +10,7 @@ export type RosterPlayer = {
   nationality?: string
   profileUrl?: string
   profileSource?: string
+  publicProfiles?: { label: string; url: string }[]
 }
 export type Roster = { team: TeamId; status: 'complete' | 'updating'; sourceUrl: string; sourceLabel: string; players: RosterPlayer[] }
 
@@ -45,7 +46,8 @@ export const rosters: Roster[] = [
       { name: 'Giovanni Sanguinetti', role: 'Centrale' }, { name: 'Federico Crosato', role: 'Centrale' },
       { name: 'Mathis Henno', role: 'Schiacciatore' }, { name: 'Kamil Semeniuk', role: 'Schiacciatore' },
       { name: 'Oleh Plotnytskyi', role: 'Schiacciatore' }, { name: 'Seyed Matin Hosseini', role: 'Schiacciatore' },
-      { name: 'Marco Gaggini', role: 'Libero' }, { name: 'Luca Loreti', role: 'Libero', followed: true },
+      { name: 'Marco Gaggini', role: 'Libero' },
+      { name: 'Luca Loreti', role: 'Libero', followed: true, birthDate: '24 dicembre 2005', height: 190, nationality: 'Italia', profileUrl: 'https://www.sirsafetyperugia.it/player/luca-loreti', profileSource: 'Profilo ufficiale Perugia', publicProfiles: [{ label: 'Instagram pubblico', url: 'https://www.instagram.com/lucaloretii__/' }] },
     ],
   },
 ]
