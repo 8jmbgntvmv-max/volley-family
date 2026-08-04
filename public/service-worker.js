@@ -1,4 +1,4 @@
-const CACHE = 'volley-family-v9'
+const CACHE = 'volley-family-v10'
 const APP_SHELL = ['/volley-family/', '/volley-family/manifest.webmanifest', '/volley-family/icon-192.png']
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL))))
 self.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))))

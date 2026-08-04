@@ -38,3 +38,7 @@ export function buildUpdateItems(news = [], results = {}, matches = []) {
 
   return [...newsItems, ...resultItems].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
 }
+
+export function unreadUpdateItems(items = [], seenIds = new Set()) {
+  return items.filter((item) => !seenIds.has(item.id))
+}
