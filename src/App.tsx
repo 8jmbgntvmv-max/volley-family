@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import './App.css'
 import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
+import { buildUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
-type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'rules'
+type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'rules' | 'updates'
 type AthleteId = 'chiara-lupoli' | 'camilla-lupoli' | 'luca-loreti'
 type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[]; summary?: string; matchFocus?: MatchFocus }
-type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[] }
+type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[]; sourceUpdatedAt?: string }
 type ResultsByMatch = Record<string, MatchResult>
 type PlayerStats = { name: string; profileUrl?: string; appearances?: number | null; points?: number | null; attacks?: number | null; attackPoints?: number | null; attackPercentage?: number | null; serves?: number | null; aces?: number | null; blocks?: number | null; serveErrors?: number | null; perfectReceptions?: number | null }
 type LeagueTeamData = { source: string; season: string; links: { results?: string; standings?: string; statistics?: string }; standing: null | { position?: number; points?: number; played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; stats: null | { played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; players?: PlayerStats[] }
 type LeagueData = { updatedAt: string | null; teams: Record<TeamId, LeagueTeamData> }
 type SelectedAthlete = { team: TeamId; player: RosterPlayer }
+type UpdatePreferences = { news: boolean; results: boolean; matches: boolean; athletes: boolean; teams: Record<TeamId, boolean> }
+const defaultUpdatePreferences: UpdatePreferences = { news: true, results: true, matches: true, athletes: true, teams: { altino: true, matese: true, perugia: true } }
 const nav: { id: Screen; label: string; icon: string }[] = [
   { id: 'home', label: 'Home', icon: '⌂' }, { id: 'agenda', label: 'Confronto', icon: '▦' },
   { id: 'teams', label: 'Squadre', icon: '●' }, { id: 'news', label: 'News', icon: '◉' },
@@ -35,6 +38,25 @@ const dateLabel = (value: string) => longDate.format(new Date(`${value}T12:00:00
 const scoreLabel = (result: MatchResult) => `${result.firstTeamSets}–${result.secondTeamSets}`
 const setsLabel = (result: MatchResult) => result.sets.map((set) => `${set.first}-${set.second}`).join(', ')
 const normalized = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('it').replace(/[^a-z0-9]+/g, ' ').trim()
+const readStoredJson = <T,>(key: string, fallback: T): T => {
+  try { return JSON.parse(localStorage.getItem(key) ?? '') as T } catch { return fallback }
+}
+const familyInviteHash = 'e79955d72b1007ea278a0977d1d7a7324b68ecf219621ce527b9bc6b17bc76e8'
+const sha256 = async (value: string) => {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value.trim()))
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+function FamilyAccessGate({ checking, inviteError, onUnlock }: { checking: boolean; inviteError: boolean; onUnlock: (code: string) => Promise<boolean> }) {
+  const [code, setCode] = useState('')
+  const [error, setError] = useState(inviteError ? 'Il collegamento d’invito non è valido.' : '')
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (await onUnlock(code)) return
+    setError('Codice famiglia non riconosciuto.')
+  }
+  return <main className="access-gate"><div className="access-mark">VF</div><p className="eyebrow">Accesso familiare</p><h1>Volley Family</h1>{checking ? <p className="access-wait">Controllo dell’invito…</p> : <><p>Apri il link ricevuto su WhatsApp oppure inserisci il codice famiglia. L’accesso resterà memorizzato su questo telefono.</p><form onSubmit={submit}><label htmlFor="family-code">Codice famiglia</label><input id="family-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" /><button type="submit">Entra nell’app</button></form>{error && <div className="access-error">{error}</div>}<small>Il link può essere usato soltanto da chi lo riceve dalla famiglia.</small></>}</main>
+}
 
 function MatchRow({ match, result }: { match: Match; result?: MatchResult }) {
   const team = teams.find((item) => item.id === match.team)!
@@ -143,6 +165,52 @@ function AthleteDetail({ selected, news, leagueData, onClose }: { selected: Sele
   </div>
 }
 
+const updateKindLabels: Record<UpdateKind, string> = {
+  news: 'News', results: 'Risultati', matches: 'Pre e post partita', athletes: 'Atleti seguiti',
+}
+
+function HomeUpdatesBanner({ count, onOpen }: { count: number; onOpen: () => void }) {
+  if (!count) return null
+  return <button className="updates-banner" onClick={onOpen}><span>●</span><div><strong>{count === 1 ? 'C’è un nuovo aggiornamento' : `Ci sono ${count} nuovi aggiornamenti`}</strong><small>News, risultati e informazioni sulle partite</small></div><b>Apri</b></button>
+}
+
+function UpdateRow({ item, unread, onRead, onOpenResults }: { item: UpdateItem; unread: boolean; onRead: (id: string) => void; onOpenResults: () => void }) {
+  const team = teams.find((candidate) => candidate.id === item.team)!
+  const content = <><span className="team-dot" style={{ background: team.color }} /><div><small>{team.shortName} · {updateKindLabels[item.kind]} · {dateLabel(item.publishedAt.slice(0, 10))}</small><strong>{item.title}</strong><span>{item.detail}</span></div>{unread && <i>NUOVO</i>}</>
+  return item.url
+    ? <a className={`update-row ${unread ? 'unread' : ''}`} href={item.url} target="_blank" rel="noreferrer" onClick={() => onRead(item.id)}>{content}</a>
+    : <button className={`update-row ${unread ? 'unread' : ''}`} onClick={() => { onRead(item.id); onOpenResults() }}>{content}</button>
+}
+
+function UpdatesCenter({ updates, seenIds, preferences, chatUrl, onPreferences, onMarkRead, onMarkAll, onSaveChat, onOpenResults }: {
+  updates: UpdateItem[]
+  seenIds: Set<string>
+  preferences: UpdatePreferences
+  chatUrl: string
+  onPreferences: (preferences: UpdatePreferences) => void
+  onMarkRead: (id: string) => void
+  onMarkAll: () => void
+  onSaveChat: (url: string) => void
+  onOpenResults: () => void
+}) {
+  const [chatDraft, setChatDraft] = useState(chatUrl)
+  const [chatError, setChatError] = useState('')
+  const unreadCount = updates.filter((item) => !seenIds.has(item.id)).length
+  const toggleKind = (kind: UpdateKind) => onPreferences({ ...preferences, [kind]: !preferences[kind] })
+  const toggleTeam = (team: TeamId) => onPreferences({ ...preferences, teams: { ...preferences.teams, [team]: !preferences.teams[team] } })
+  const saveChat = () => {
+    const value = chatDraft.trim()
+    if (value && !/^https:\/\/chat\.whatsapp\.com\//i.test(value)) { setChatError('Inserisci un link di invito WhatsApp valido.'); return }
+    setChatError('')
+    onSaveChat(value)
+  }
+  return <section className="page updates-page"><p className="eyebrow">Controllo aggiornamenti</p><div className="updates-page-heading"><div><h2>Novità</h2><p>{unreadCount ? `${unreadCount} da leggere` : 'Sei in pari con gli aggiornamenti'}</p></div>{unreadCount > 0 && <button onClick={onMarkAll}>Segna tutto come letto</button>}</div>
+    <article className="updates-settings"><details><summary><div><strong>Cosa vuoi seguire</strong><small>Le preferenze restano salvate su questo telefono</small></div><b>＋</b></summary><div className="preference-group"><span>Tipologia</span><div>{(Object.keys(updateKindLabels) as UpdateKind[]).map((kind) => <label key={kind}><input type="checkbox" checked={preferences[kind]} onChange={() => toggleKind(kind)} />{updateKindLabels[kind]}</label>)}</div></div><div className="preference-group"><span>Squadre</span><div>{teams.map((team) => <label key={team.id}><input type="checkbox" checked={preferences.teams[team.id]} onChange={() => toggleTeam(team.id)} />{team.shortName}</label>)}</div></div></details></article>
+    <article className="family-chat-card"><div className="chat-card-heading"><span>WA</span><div><strong>Chat famiglia</strong><small>Si apre direttamente il gruppo WhatsApp</small></div>{chatUrl && <a href={chatUrl} target="_blank" rel="noreferrer">Apri</a>}</div><label htmlFor="whatsapp-link">Link d’invito del gruppo</label><div className="chat-link-form"><input id="whatsapp-link" type="url" value={chatDraft} onChange={(event) => setChatDraft(event.target.value)} placeholder="https://chat.whatsapp.com/…" /><button onClick={saveChat}>Salva</button></div>{chatError && <p className="chat-error">{chatError}</p>}<p>Il collegamento resta soltanto su questo dispositivo e non viene pubblicato su GitHub.</p></article>
+    <div className="updates-list">{updates.slice(0, 60).map((item) => <UpdateRow key={item.id} item={item} unread={!seenIds.has(item.id)} onRead={onMarkRead} onOpenResults={onOpenResults} />)}{updates.length === 0 && <div className="detail-empty"><strong>Nessun aggiornamento per i filtri scelti</strong><span>Puoi modificare le preferenze qui sopra.</span></div>}</div>
+  </section>
+}
+
 function HomeResultsAndStandings({ results, leagueData }: { results: ResultsByMatch; leagueData: LeagueData | null }) {
   return <section className="home-dashboard" aria-labelledby="home-results-title"><div className="dashboard-heading"><div><p className="eyebrow">Campionati</p><h2 id="home-results-title">Risultati e classifiche</h2></div></div><p className="dashboard-note">La stagione non è ancora iniziata: i dati 2025/26 non vengono mescolati con il nuovo campionato.</p><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Ultimi risultati</h3>{teams.map((team) => {
     const played = matches.filter((match) => match.team === team.id && match.matchNumber && results[match.matchNumber]?.played).sort((a, b) => b.date.localeCompare(a.date))[0]
@@ -191,17 +259,101 @@ function App() {
   const [results, setResults] = useState<ResultsByMatch>({})
   const [leagueData, setLeagueData] = useState<LeagueData | null>(null)
   const [selectedAthlete, setSelectedAthlete] = useState<SelectedAthlete | null>(null)
+  const [dataReady, setDataReady] = useState(false)
+  const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'locked'>('checking')
+  const [inviteError, setInviteError] = useState(false)
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => new Set(readStoredJson<string[]>('vf-seen-updates-v1', [])))
+  const [updatesInitialized, setUpdatesInitialized] = useState(() => localStorage.getItem('vf-updates-ready-v1') === '1')
+  const [preferences, setPreferences] = useState<UpdatePreferences>(() => {
+    const stored = readStoredJson<Partial<UpdatePreferences>>('vf-update-preferences-v1', {})
+    return { ...defaultUpdatePreferences, ...stored, teams: { ...defaultUpdatePreferences.teams, ...(stored.teams ?? {}) } }
+  })
+  const [chatUrl, setChatUrl] = useState(() => localStorage.getItem('vf-whatsapp-group-v1') ?? '')
   const weekends = useMemo(() => groupByWeekend(matches), [])
+  const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
+  const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
+  const unreadUpdates = useMemo(() => visibleUpdates.filter((item) => !seenIds.has(item.id)), [visibleUpdates, seenIds])
+
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}news.json`).then((response) => response.json()).then((data) => setNews(data.items ?? [])).catch(() => setNews([]))
-    fetch(`${import.meta.env.BASE_URL}results.json`).then((response) => response.json()).then((data) => setResults(Object.fromEntries((data.items ?? []).map((item: MatchResult) => [item.matchNumber, item])))).catch(() => setResults({}))
-    fetch(`${import.meta.env.BASE_URL}league-data.json`).then((response) => response.json()).then(setLeagueData).catch(() => setLeagueData(null))
+    const checkAccess = async () => {
+      if (localStorage.getItem('vf-family-access-v1') === 'granted') { setAccessStatus('granted'); return }
+      const url = new URL(window.location.href)
+      const invite = url.searchParams.get('invite')
+      if (!invite) { setAccessStatus('locked'); return }
+      url.searchParams.delete('invite')
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+      if (await sha256(invite) === familyInviteHash) { localStorage.setItem('vf-family-access-v1', 'granted'); setAccessStatus('granted') } else { setInviteError(true); setAccessStatus('locked') }
+    }
+    void checkAccess()
   }, [])
+
+  useEffect(() => {
+    const loadData = async () => {
+      const options: RequestInit = { cache: 'no-store' }
+      const [newsResponse, resultsResponse, leagueResponse] = await Promise.allSettled([
+        fetch(`${import.meta.env.BASE_URL}news.json`, options).then((response) => response.json()),
+        fetch(`${import.meta.env.BASE_URL}results.json`, options).then((response) => response.json()),
+        fetch(`${import.meta.env.BASE_URL}league-data.json`, options).then((response) => response.json()),
+      ])
+      if (newsResponse.status === 'fulfilled') setNews(newsResponse.value.items ?? [])
+      if (resultsResponse.status === 'fulfilled') setResults(Object.fromEntries((resultsResponse.value.items ?? []).map((item: MatchResult) => [item.matchNumber, item])))
+      if (leagueResponse.status === 'fulfilled') setLeagueData(leagueResponse.value)
+      setDataReady(true)
+    }
+    void loadData()
+    const timer = window.setInterval(loadData, 5 * 60 * 1000)
+    const refreshVisible = () => { if (document.visibilityState === 'visible') void loadData() }
+    document.addEventListener('visibilitychange', refreshVisible)
+    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', refreshVisible) }
+  }, [])
+
+  useEffect(() => {
+    if (!dataReady || updatesInitialized || !updates.length) return
+    const baseline = new Set(updates.map((item) => item.id))
+    setSeenIds(baseline)
+    localStorage.setItem('vf-seen-updates-v1', JSON.stringify([...baseline]))
+    localStorage.setItem('vf-updates-ready-v1', '1')
+    setUpdatesInitialized(true)
+  }, [dataReady, updates, updatesInitialized])
+
+  useEffect(() => { localStorage.setItem('vf-update-preferences-v1', JSON.stringify(preferences)) }, [preferences])
+  useEffect(() => {
+    const badge = navigator as Navigator & { setAppBadge?: (value?: number) => Promise<void>; clearAppBadge?: () => Promise<void> }
+    if (unreadUpdates.length) void badge.setAppBadge?.(unreadUpdates.length)
+    else void badge.clearAppBadge?.()
+  }, [unreadUpdates.length])
+
+  const unlock = async (code: string) => {
+    if (await sha256(code) !== familyInviteHash) return false
+    localStorage.setItem('vf-family-access-v1', 'granted')
+    setAccessStatus('granted')
+    setInviteError(false)
+    return true
+  }
+  const markRead = (id: string) => setSeenIds((current) => {
+    const next = new Set(current).add(id)
+    localStorage.setItem('vf-seen-updates-v1', JSON.stringify([...next].slice(-500)))
+    return next
+  })
+  const markAllRead = () => setSeenIds((current) => {
+    const next = new Set([...current, ...visibleUpdates.map((item) => item.id)])
+    localStorage.setItem('vf-seen-updates-v1', JSON.stringify([...next].slice(-500)))
+    return next
+  })
+  const saveChatUrl = (url: string) => {
+    setChatUrl(url)
+    if (url) localStorage.setItem('vf-whatsapp-group-v1', url)
+    else localStorage.removeItem('vf-whatsapp-group-v1')
+  }
+  const logout = () => { localStorage.removeItem('vf-family-access-v1'); setAccessStatus('locked'); setScreen('home') }
+
+  if (accessStatus !== 'granted') return <FamilyAccessGate checking={accessStatus === 'checking'} inviteError={inviteError} onUnlock={unlock} />
   return <div className="app-shell">
-    <header className="topbar"><div><p className="eyebrow">Stagione 2026/27</p><h1>Volley Family</h1></div><div className="app-mark">VF</div></header>
+    <header className="topbar"><div><p className="eyebrow">Stagione 2026/27</p><h1>Volley Family</h1></div><div className="topbar-actions"><button className="updates-button" onClick={() => setScreen('updates')} aria-label={unreadUpdates.length === 1 ? '1 nuovo aggiornamento' : unreadUpdates.length ? `${unreadUpdates.length} nuovi aggiornamenti` : 'Apri Novità'}><span>♢</span>{unreadUpdates.length > 0 && <b>{unreadUpdates.length > 99 ? '99+' : unreadUpdates.length}</b>}</button><div className="app-mark">VF</div></div></header>
     <main className="content">
       {screen === 'home' && <>
         <section className="hero-card"><p className="eyebrow light">Agenda condivisa</p><h2>Tutte le partite, senza suggerimenti</h2><p>Consulta liberamente gare in casa e trasferte di Altino, Matese e Perugia.</p><button onClick={() => setScreen('agenda')}>Apri i calendari</button></section>
+        <HomeUpdatesBanner count={unreadUpdates.length} onOpen={() => setScreen('updates')} />
         <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
         <HomeRosters onSelectAthlete={setSelectedAthlete} />
         <HomeResultsAndStandings results={results} leagueData={leagueData} />
@@ -214,7 +366,8 @@ function App() {
       {screen === 'agenda' && <section className="page"><p className="eyebrow">Agenda settimanale</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza graduatorie o suggerimenti. I risultati ufficiali FIPAV di Matese vengono aggiornati automaticamente.</p><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
       {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div>{team.id === 'matese' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali FIPAV nazionale, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{matches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={match.matchNumber ? results[match.matchNumber] : undefined} /></div>)}</section>)}</section>}
       {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
-      {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div></section>}
+      {screen === 'updates' && <UpdatesCenter updates={visibleUpdates} seenIds={seenIds} preferences={preferences} chatUrl={chatUrl} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onSaveChat={saveChatUrl} onOpenResults={() => setScreen('agenda')} />}
+      {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}
     </main>
     {selectedAthlete && <AthleteDetail selected={selectedAthlete} news={news} leagueData={leagueData} onClose={() => setSelectedAthlete(null)} />}
     <nav className="bottom-nav" aria-label="Navigazione principale">{nav.map((item) => <button key={item.id} className={screen === item.id ? 'active' : ''} onClick={() => setScreen(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav>

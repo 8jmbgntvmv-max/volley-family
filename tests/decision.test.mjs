@@ -9,6 +9,7 @@ import { googleMapsDirectionsUrl } from '../src/lib/maps.mjs'
 import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { parseLfvPlayerStats } from '../src/lib/league-stats.mjs'
+import { buildUpdateItems } from '../src/lib/update-center.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -104,4 +105,20 @@ test('completa il roster Altino e rende apribile ogni atleta', async () => {
 test('estrae le statistiche personali dalla tabella ufficiale della Lega femminile', () => {
   const html = '<h2>Top atlete</h2><table><tbody><tr><td>1</td><td></td><td><a href="/player/player/CAM-LUP-03/">Camilla Lupoli</a></td><td>4</td><td>12</td><td>8</td><td>5</td><td>62,5%</td><td>20</td><td>3</td><td>2</td><td>1</td><td>7</td></tr></tbody></table>'
   assert.deepEqual(parseLfvPlayerStats(html), [{ name: 'Camilla Lupoli', profileUrl: 'https://www.legavolleyfemminile.it/player/player/CAM-LUP-03/', appearances: 4, points: 12, attacks: 8, attackPoints: 5, attackPercentage: 62.5, serves: 20, aces: 3, blocks: 2, serveErrors: 1, perfectReceptions: 7 }])
+})
+test('crea il centro Novità da news, pre-partita, atleti e risultati', () => {
+  const news = [
+    { id: 'n1', team: 'altino', title: 'Nuova maglia', url: 'https://example.test/1', source: 'Club', publishedAt: '2026-08-04T10:00:00Z' },
+    { id: 'n2', team: 'matese', title: 'Il coach presenta la gara', url: 'https://example.test/2', source: 'Club', publishedAt: '2026-08-04T11:00:00Z', matchFocus: 'pre' },
+    { id: 'n3', team: 'perugia', title: 'Intervista a Luca Loreti', url: 'https://example.test/3', source: 'Club', publishedAt: '2026-08-04T12:00:00Z', athleteIds: ['luca-loreti'] },
+  ]
+  const results = { '11404': { matchNumber: '11404', played: true, firstTeamSets: 1, secondTeamSets: 3, sets: [{ first: 20, second: 25 }] } }
+  const schedule = [{ matchNumber: '11404', team: 'matese', opponent: 'Poolstars', home: false, date: '2026-10-17' }]
+  const items = buildUpdateItems(news, results, schedule)
+  assert.deepEqual(new Set(items.map((item) => item.kind)), new Set(['news', 'matches', 'athletes', 'results']))
+})
+test('predispone accesso tramite invito, avvisi interni e chat WhatsApp locale', async () => {
+  const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  for (const value of ['Accesso familiare', 'Codice famiglia', 'Chat famiglia', 'Segna tutto come letto', 'vf-seen-updates-v1', 'vf-whatsapp-group-v1']) assert.match(app, new RegExp(value))
+  assert.match(app, /familyInviteHash = '[a-f0-9]{64}'/)
 })
