@@ -11,6 +11,8 @@ import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { parseLfvPlayerStats } from '../src/lib/league-stats.mjs'
 import { buildUpdateItems, unreadUpdateItems } from '../src/lib/update-center.mjs'
 import { familyChatService } from '../src/lib/family-chat.mjs'
+import { athleteMediaLinks } from '../src/lib/athlete-media.mjs'
+import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -101,7 +103,7 @@ test('completa il roster Altino e rende apribile ogni atleta', async () => {
   assert.match(app, /onSelectAthlete/)
   assert.match(app, /Statistiche personali/)
   assert.match(app, /Stampa e articoli/)
-  assert.match(app, /Social ufficiali della squadra/)
+  assert.match(app, /Società e canali ufficiali/)
 })
 test('estrae le statistiche personali dalla tabella ufficiale della Lega femminile', () => {
   const html = '<h2>Top atlete</h2><table><tbody><tr><td>1</td><td></td><td><a href="/player/player/CAM-LUP-03/">Camilla Lupoli</a></td><td>4</td><td>12</td><td>8</td><td>5</td><td>62,5%</td><td>20</td><td>3</td><td>2</td><td>1</td><td>7</td></tr></tbody></table>'
@@ -135,6 +137,23 @@ test('la chat famiglia accetta WhatsApp, Telegram e Signal', () => {
   assert.equal(familyChatService('https://t.me/+famiglia'), 'Telegram')
   assert.equal(familyChatService('https://signal.group/#famiglia'), 'Signal')
   assert.equal(familyChatService('https://example.test/famiglia'), null)
+})
+test('ogni atleta dispone di ricerche stampa, social, video e società', () => {
+  const links = athleteMediaLinks('Luca Loreti', 'https://www.sirsafetyperugia.it/')
+  assert.deepEqual(links.map((link) => link.id), ['news', 'web', 'instagram', 'facebook', 'youtube', 'club'])
+  for (const link of links) assert.match(link.url, /^https:\/\//)
+  assert.match(links.find((link) => link.id === 'instagram').url, /instagram/)
+  assert.match(links.find((link) => link.id === 'club').url, /sirsafetyperugia/)
+})
+test('la scheda atleta collega media pubblici e canali della società', async () => {
+  const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  for (const label of ['Media dell’atleta', 'Stampa e articoli', 'Società e canali ufficiali']) assert.match(app, new RegExp(label))
+})
+test('predispone le dirette sui canali YouTube ufficiali', async () => {
+  assert.equal(youtubeLiveUrl('https://www.youtube.com/@asdaltinovolley'), 'https://www.youtube.com/@asdaltinovolley/live')
+  assert.equal(youtubeLiveUrl(), null)
+  const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  for (const label of ['Dirette delle partite', 'Apri diretta', 'Canale in attesa']) assert.match(app, new RegExp(label))
 })
 test('predispone accesso tramite invito, avvisi interni e chat famiglia locale', async () => {
   const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')

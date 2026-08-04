@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import './App.css'
+import './AthleteMedia.css'
+import './LiveStreams.css'
 import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
 import { buildUpdateItems, unreadUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
 import { familyChatService } from './lib/family-chat.mjs'
+import { athleteMediaLinks } from './lib/athlete-media.mjs'
+import { youtubeLiveUrl } from './lib/live-streams.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
@@ -27,7 +31,7 @@ const nav: { id: Screen; label: string; icon: string }[] = [
 const sources = {
   altino: { site: 'https://www.altinovolley.it/', instagram: 'https://www.instagram.com/altinovolley.official/', facebook: 'https://www.facebook.com/altinovolley/', youtube: 'https://www.youtube.com/@asdaltinovolley' },
   matese: { instagram: 'https://www.instagram.com/polisportivamatese/', facebook: 'https://www.facebook.com/polisportiva.matese' },
-  perugia: { site: 'https://www.sirsafetyperugia.it/new/', instagram: 'https://www.instagram.com/sirsafetyperugia/', facebook: 'https://www.facebook.com/SirSafetyPerugiaVolley/', youtube: 'https://www.youtube.com/channel/UCaqDD5gvrybIDsgltOQdzog/' },
+  perugia: { site: 'https://www.sirsafetyperugia.it/', instagram: 'https://www.instagram.com/sirsafetyperugia/', facebook: 'https://www.facebook.com/SirSafetyPerugiaVolley/', youtube: 'https://www.youtube.com/channel/UCaqDD5gvrybIDsgltOQdzog/' },
 }
 const athletes: { id: AthleteId; name: string; team: TeamId }[] = [
   { id: 'chiara-lupoli', name: 'Chiara Lupoli', team: 'matese' },
@@ -146,8 +150,10 @@ function AthleteDetail({ selected, news, leagueData, onClose }: { selected: Sele
     ['Presenze', personalStats.appearances], ['Punti', personalStats.points], ['Punti attacco', personalStats.attackPoints],
     ['Efficienza attacco', personalStats.attackPercentage == null ? null : `${personalStats.attackPercentage}%`], ['Ace', personalStats.aces], ['Muri', personalStats.blocks],
   ].filter((item) => item[1] !== null && item[1] !== undefined) : []
-  const pressUrl = `https://news.google.com/search?q=${encodeURIComponent(`"${player.name}" pallavolo`)}&hl=it&gl=IT&ceid=IT:it`
-  const socialLinks = Object.entries(sources[teamId]).filter(([label]) => label !== 'site')
+  const teamSources = sources[teamId] as Record<string, string>
+  const mediaLinks = athleteMediaLinks(player.name, teamSources.site)
+  const pressUrl = mediaLinks.find((link) => link.id === 'news')!.url
+  const societyLinks = Object.entries(teamSources)
 
   return <div className="athlete-detail-overlay" role="dialog" aria-modal="true" aria-labelledby="athlete-detail-title" onClick={(event) => { if (event.target === event.currentTarget) onClose() }}>
     <article className="athlete-detail">
@@ -159,8 +165,9 @@ function AthleteDetail({ selected, news, leagueData, onClose }: { selected: Sele
           <div><small>Nazionalità</small><strong>{player.nationality ?? 'Da pubblicare'}</strong></div>
         </div>{player.profileUrl && <a className="primary-detail-link" href={player.profileUrl} target="_blank" rel="noreferrer">{player.profileSource ?? 'Profilo ufficiale'}</a>}</section>
         <section><p className="eyebrow">Statistiche personali</p>{statItems.length ? <div className="personal-stats">{statItems.map(([label, value]) => <div key={label}><strong>{value}</strong><small>{label}</small></div>)}</div> : <div className="detail-empty"><strong>Dati non ancora pubblicati</strong><span>Le statistiche compariranno qui dopo la pubblicazione ufficiale della competizione.</span></div>}{(personalStats?.profileUrl || official?.links.statistics) && <a className="secondary-detail-link" href={personalStats?.profileUrl ?? official?.links.statistics} target="_blank" rel="noreferrer">Apri le statistiche ufficiali</a>}</section>
-        <section><div className="detail-section-heading"><p className="eyebrow">Stampa e articoli</p><a href={pressUrl} target="_blank" rel="noreferrer">Cerca altre notizie</a></div>{mentions.length ? <div className="athlete-detail-news">{mentions.map((item) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id}><small>{item.source} · {dateLabel(item.publishedAt.slice(0, 10))}</small><strong>{item.title}</strong></a>)}</div> : <div className="detail-empty"><strong>Nessun articolo trovato nell’archivio</strong><span>La ricerca automatica continua con i prossimi aggiornamenti.</span></div>}</section>
-        <section><p className="eyebrow">Social ufficiali della squadra</p><div className="detail-socials">{socialLinks.map(([label, url]) => <a href={url} target="_blank" rel="noreferrer" key={label}>{label[0].toUpperCase() + label.slice(1)}</a>)}</div><p className="social-note">I post personali compaiono tra gli articoli quando sono accessibili pubblicamente; i pulsanti aprono i canali ufficiali della società.</p></section>
+        <section><p className="eyebrow">Media dell’atleta</p>{player.publicProfiles?.length ? <div className="verified-profile-links">{player.publicProfiles.map((profile) => <a href={profile.url} target="_blank" rel="noreferrer" key={profile.url}>{profile.label}</a>)}</div> : null}<div className="athlete-media-grid">{mediaLinks.map((link) => <a href={link.url} target="_blank" rel="noreferrer" key={link.id}><strong>{link.label}</strong><small>{link.detail}</small></a>)}</div><p className="athlete-media-note">Le ricerche usano il nome esatto e mostrano soltanto contenuti pubblici. Un profilo personale viene indicato come diretto solo quando è identificato con sufficiente certezza.</p></section>
+        <section><div className="detail-section-heading"><p className="eyebrow">Stampa e articoli</p><a href={pressUrl} target="_blank" rel="noreferrer">Cerca altre notizie</a></div>{mentions.length ? <div className="athlete-detail-news">{mentions.map((item) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id}><small>{item.source} · {dateLabel(item.publishedAt.slice(0, 10))}</small><strong>{item.title}</strong></a>)}</div> : <div className="detail-empty"><strong>Nessun articolo trovato nell’archivio</strong><span>Usa i collegamenti Media qui sopra per cercare le pubblicazioni disponibili sul web.</span></div>}</section>
+        <section><p className="eyebrow">Società e canali ufficiali</p><div className="detail-socials">{societyLinks.map(([label, url]) => <a href={url} target="_blank" rel="noreferrer" key={label}>{label === 'site' ? 'Sito della società' : label[0].toUpperCase() + label.slice(1)}</a>)}</div><p className="social-note">Questi pulsanti aprono esclusivamente il sito e i canali pubblici ufficiali della società.</p></section>
       </div>
     </article>
   </div>
@@ -173,6 +180,14 @@ const updateKindLabels: Record<UpdateKind, string> = {
 function HomeUpdatesBanner({ count, onOpen }: { count: number; onOpen: () => void }) {
   if (!count) return null
   return <button className="updates-banner" onClick={onOpen}><span>●</span><div><strong>{count === 1 ? 'C’è un nuovo aggiornamento' : `Ci sono ${count} nuovi aggiornamenti`}</strong><small>News, risultati e informazioni sulle partite</small></div><b>Apri</b></button>
+}
+
+function HomeLiveStreams() {
+  return <section className="home-dashboard" aria-labelledby="home-live-title"><div className="dashboard-heading"><div><p className="eyebrow">YouTube ufficiale</p><h2 id="home-live-title">Dirette delle partite</h2></div></div><p className="dashboard-note">Il pulsante apre direttamente l’area live del canale ufficiale della società. Se una diretta è programmata o già iniziata, YouTube la mostra sul canale.</p><div className="live-stream-grid">{teams.map((team) => {
+    const channel = (sources[team.id] as Record<string, string>).youtube
+    const liveUrl = youtubeLiveUrl(channel)
+    return <article className="live-stream-card" key={team.id}><span>LIVE</span><div><strong>{team.shortName}</strong><small>{liveUrl ? 'Canale ufficiale collegato' : 'Spazio già predisposto'}</small></div>{liveUrl ? <a href={liveUrl} target="_blank" rel="noreferrer">Apri diretta</a> : <span className="live-stream-pending">Canale in attesa</span>}</article>
+  })}</div></section>
 }
 
 function UpdateRow({ item, unread, onRead, onOpenResults }: { item: UpdateItem; unread: boolean; onRead: (id: string) => void; onOpenResults: () => void }) {
@@ -358,6 +373,7 @@ function App() {
       {screen === 'home' && <>
         <section className="hero-card"><p className="eyebrow light">Agenda condivisa</p><h2>Tutte le partite, senza suggerimenti</h2><p>Consulta liberamente gare in casa e trasferte di Altino, Matese e Perugia.</p><button onClick={() => setScreen('agenda')}>Apri i calendari</button></section>
         <HomeUpdatesBanner count={unreadUpdates.length} onOpen={() => setScreen('updates')} />
+        <HomeLiveStreams />
         <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
         <HomeRosters onSelectAthlete={setSelectedAthlete} />
         <HomeResultsAndStandings results={results} leagueData={leagueData} />
