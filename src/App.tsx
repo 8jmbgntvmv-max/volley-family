@@ -4,6 +4,7 @@ import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
 import { buildUpdateItems, unreadUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
+import { familyChatService } from './lib/family-chat.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
@@ -195,19 +196,20 @@ function UpdatesCenter({ updates, seenIds, preferences, chatUrl, onPreferences, 
 }) {
   const [chatDraft, setChatDraft] = useState(chatUrl)
   const [chatError, setChatError] = useState('')
+  const chatService = familyChatService(chatUrl)
   const pendingUpdates = unreadUpdateItems(updates, seenIds)
   const unreadCount = pendingUpdates.length
   const toggleKind = (kind: UpdateKind) => onPreferences({ ...preferences, [kind]: !preferences[kind] })
   const toggleTeam = (team: TeamId) => onPreferences({ ...preferences, teams: { ...preferences.teams, [team]: !preferences.teams[team] } })
   const saveChat = () => {
     const value = chatDraft.trim()
-    if (value && !/^https:\/\/chat\.whatsapp\.com\//i.test(value)) { setChatError('Inserisci un link di invito WhatsApp valido.'); return }
+    if (value && !familyChatService(value)) { setChatError('Inserisci un link valido di WhatsApp, Telegram o Signal.'); return }
     setChatError('')
     onSaveChat(value)
   }
   return <section className="page updates-page"><p className="eyebrow">Controllo aggiornamenti</p><div className="updates-page-heading"><div><h2>Novità</h2><p>{unreadCount ? `${unreadCount} da leggere` : 'Sei in pari con gli aggiornamenti'}</p></div>{unreadCount > 0 && <button onClick={onMarkAll}>Segna tutto come letto</button>}</div>
     <article className="updates-settings"><details><summary><div><strong>Cosa vuoi seguire</strong><small>Le preferenze restano salvate su questo telefono</small></div><b>＋</b></summary><div className="preference-group"><span>Tipologia</span><div>{(Object.keys(updateKindLabels) as UpdateKind[]).map((kind) => <label key={kind}><input type="checkbox" checked={preferences[kind]} onChange={() => toggleKind(kind)} />{updateKindLabels[kind]}</label>)}</div></div><div className="preference-group"><span>Squadre</span><div>{teams.map((team) => <label key={team.id}><input type="checkbox" checked={preferences.teams[team.id]} onChange={() => toggleTeam(team.id)} />{team.shortName}</label>)}</div></div></details></article>
-    <article className="family-chat-card"><div className="chat-card-heading"><span>WA</span><div><strong>Chat famiglia</strong><small>Si apre direttamente il gruppo WhatsApp</small></div>{chatUrl && <a href={chatUrl} target="_blank" rel="noreferrer">Apri</a>}</div><label htmlFor="whatsapp-link">Link d’invito del gruppo</label><div className="chat-link-form"><input id="whatsapp-link" type="url" value={chatDraft} onChange={(event) => setChatDraft(event.target.value)} placeholder="https://chat.whatsapp.com/…" /><button onClick={saveChat}>Salva</button></div>{chatError && <p className="chat-error">{chatError}</p>}<p>Il collegamento resta soltanto su questo dispositivo e non viene pubblicato su GitHub.</p></article>
+    <article className="family-chat-card"><div className="chat-card-heading"><span>{chatService === 'WhatsApp' ? 'WA' : chatService === 'Telegram' ? 'TG' : chatService === 'Signal' ? 'SG' : 'CHAT'}</span><div><strong>Chat famiglia</strong><small>{chatService ? `Apri il gruppo su ${chatService}` : 'Puoi scegliere WhatsApp, Telegram o Signal'}</small></div>{chatUrl && <a href={chatUrl} target="_blank" rel="noreferrer">Apri</a>}</div><label htmlFor="family-chat-link">Link d’invito del gruppo</label><div className="chat-link-form"><input id="family-chat-link" type="url" value={chatDraft} onChange={(event) => setChatDraft(event.target.value)} placeholder="WhatsApp, Telegram o Signal" /><button onClick={saveChat}>Salva</button></div>{chatError && <p className="chat-error">{chatError}</p>}<p>Il collegamento resta soltanto su questo dispositivo e non viene pubblicato su GitHub.</p></article>
     <div className="updates-list">{pendingUpdates.slice(0, 60).map((item) => <UpdateRow key={item.id} item={item} unread onRead={onMarkRead} onOpenResults={onOpenResults} />)}{pendingUpdates.length === 0 && <div className="detail-empty"><strong>Nessun nuovo aggiornamento</strong><span>Le notizie già lette restano disponibili nella sezione News.</span></div>}</div>
   </section>
 }
@@ -269,7 +271,7 @@ function App() {
     const stored = readStoredJson<Partial<UpdatePreferences>>('vf-update-preferences-v1', {})
     return { ...defaultUpdatePreferences, ...stored, teams: { ...defaultUpdatePreferences.teams, ...(stored.teams ?? {}) } }
   })
-  const [chatUrl, setChatUrl] = useState(() => localStorage.getItem('vf-whatsapp-group-v1') ?? '')
+  const [chatUrl, setChatUrl] = useState(() => localStorage.getItem('vf-family-chat-link-v1') ?? localStorage.getItem('vf-whatsapp-group-v1') ?? '')
   const weekends = useMemo(() => groupByWeekend(matches), [])
   const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
   const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
@@ -343,14 +345,15 @@ function App() {
   })
   const saveChatUrl = (url: string) => {
     setChatUrl(url)
-    if (url) localStorage.setItem('vf-whatsapp-group-v1', url)
-    else localStorage.removeItem('vf-whatsapp-group-v1')
+    if (url) localStorage.setItem('vf-family-chat-link-v1', url)
+    else localStorage.removeItem('vf-family-chat-link-v1')
+    localStorage.removeItem('vf-whatsapp-group-v1')
   }
   const logout = () => { localStorage.removeItem('vf-family-access-v1'); setAccessStatus('locked'); setScreen('home') }
 
   if (accessStatus !== 'granted') return <FamilyAccessGate checking={accessStatus === 'checking'} inviteError={inviteError} onUnlock={unlock} />
   return <div className="app-shell">
-    <header className="topbar"><div><p className="eyebrow">Stagione 2026/27</p><h1>Volley Family</h1></div><div className="topbar-actions"><button className="updates-button" onClick={() => setScreen('updates')} aria-label={unreadUpdates.length === 1 ? '1 nuovo aggiornamento' : unreadUpdates.length ? `${unreadUpdates.length} nuovi aggiornamenti` : 'Apri Novità'}><span>♢</span>{unreadUpdates.length > 0 && <b>{unreadUpdates.length > 99 ? '99+' : unreadUpdates.length}</b>}</button><div className="app-mark">VF</div></div></header>
+    <header className="topbar"><div><p className="eyebrow">Stagione 2026/27</p><h1>Volley Family</h1></div><div className="topbar-actions"><button className="updates-button" onClick={() => setScreen('updates')} aria-label={unreadUpdates.length === 1 ? 'Novità: 1 nuovo aggiornamento' : unreadUpdates.length ? `Novità: ${unreadUpdates.length} nuovi aggiornamenti` : 'Apri Novità'}><span>Novità</span>{unreadUpdates.length > 0 && <b>{unreadUpdates.length > 99 ? '99+' : unreadUpdates.length}</b>}</button><div className="app-mark">VF</div></div></header>
     <main className="content">
       {screen === 'home' && <>
         <section className="hero-card"><p className="eyebrow light">Agenda condivisa</p><h2>Tutte le partite, senza suggerimenti</h2><p>Consulta liberamente gare in casa e trasferte di Altino, Matese e Perugia.</p><button onClick={() => setScreen('agenda')}>Apri i calendari</button></section>

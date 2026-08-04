@@ -10,6 +10,7 @@ import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { parseLfvPlayerStats } from '../src/lib/league-stats.mjs'
 import { buildUpdateItems, unreadUpdateItems } from '../src/lib/update-center.mjs'
+import { familyChatService } from '../src/lib/family-chat.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -124,8 +125,19 @@ test('Novità non ripete le news già lette', () => {
   ]
   assert.deepEqual(unreadUpdateItems(items, new Set(['news:letta'])), [items[1]])
 })
-test('predispone accesso tramite invito, avvisi interni e chat WhatsApp locale', async () => {
+test('il pulsante Novità è riconoscibile dal testo', async () => {
   const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
-  for (const value of ['Accesso familiare', 'Codice famiglia', 'Chat famiglia', 'Segna tutto come letto', 'vf-seen-updates-v1', 'vf-whatsapp-group-v1']) assert.match(app, new RegExp(value))
+  assert.match(app, /className="updates-button"[\s\S]*?<span>Novità<\/span>/)
+  assert.doesNotMatch(app, /<span>♢<\/span>/)
+})
+test('la chat famiglia accetta WhatsApp, Telegram e Signal', () => {
+  assert.equal(familyChatService('https://chat.whatsapp.com/famiglia'), 'WhatsApp')
+  assert.equal(familyChatService('https://t.me/+famiglia'), 'Telegram')
+  assert.equal(familyChatService('https://signal.group/#famiglia'), 'Signal')
+  assert.equal(familyChatService('https://example.test/famiglia'), null)
+})
+test('predispone accesso tramite invito, avvisi interni e chat famiglia locale', async () => {
+  const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  for (const value of ['Accesso familiare', 'Codice famiglia', 'Chat famiglia', 'Segna tutto come letto', 'vf-seen-updates-v1', 'vf-family-chat-link-v1']) assert.match(app, new RegExp(value))
   assert.match(app, /familyInviteHash = '[a-f0-9]{64}'/)
 })
