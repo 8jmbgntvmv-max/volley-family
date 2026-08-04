@@ -10,7 +10,7 @@ import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { parseLfvPlayerStats } from '../src/lib/league-stats.mjs'
 import { buildUpdateItems, unreadUpdateItems } from '../src/lib/update-center.mjs'
-import { familyChatService } from '../src/lib/family-chat.mjs'
+import { isFamilyBoardConfigured, validateFamilyBoardPost } from '../src/lib/family-board.mjs'
 import { athleteMediaLinks } from '../src/lib/athlete-media.mjs'
 import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
@@ -132,11 +132,12 @@ test('il pulsante Novità è riconoscibile dal testo', async () => {
   assert.match(app, /className="updates-button"[\s\S]*?<span>Novità<\/span>/)
   assert.doesNotMatch(app, /<span>♢<\/span>/)
 })
-test('la chat famiglia accetta WhatsApp, Telegram e Signal', () => {
-  assert.equal(familyChatService('https://chat.whatsapp.com/famiglia'), 'WhatsApp')
-  assert.equal(familyChatService('https://t.me/+famiglia'), 'Telegram')
-  assert.equal(familyChatService('https://signal.group/#famiglia'), 'Signal')
-  assert.equal(familyChatService('https://example.test/famiglia'), null)
+test('la bacheca valida i messaggi e richiede un archivio configurato', () => {
+  assert.equal(isFamilyBoardConfigured({ url: 'https://example.supabase.co', anonKey: 'public-key' }), true)
+  assert.equal(isFamilyBoardConfigured({ url: '', anonKey: '' }), false)
+  assert.deepEqual(validateFamilyBoardPost('  Ci sarò sabato  '), { valid: true, content: 'Ci sarò sabato' })
+  assert.equal(validateFamilyBoardPost('   ').valid, false)
+  assert.equal(validateFamilyBoardPost('x'.repeat(501)).valid, false)
 })
 test('ogni atleta dispone di ricerche stampa, social, video e società', () => {
   const links = athleteMediaLinks('Luca Loreti', 'https://www.sirsafetyperugia.it/')
@@ -155,8 +156,13 @@ test('predispone le dirette sui canali YouTube ufficiali', async () => {
   const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
   for (const label of ['Dirette delle partite', 'Apri diretta', 'Canale in attesa']) assert.match(app, new RegExp(label))
 })
-test('predispone accesso tramite invito, avvisi interni e chat famiglia locale', async () => {
-  const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
-  for (const value of ['Accesso familiare', 'Codice famiglia', 'Chat famiglia', 'Segna tutto come letto', 'vf-seen-updates-v1', 'vf-family-chat-link-v1']) assert.match(app, new RegExp(value))
+test('predispone accesso tramite invito, avvisi interni e bacheca familiare condivisa', async () => {
+  const [app, schema] = await Promise.all([
+    readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/family-board.sql', import.meta.url), 'utf8'),
+  ])
+  for (const value of ['Accesso familiare', 'Codice famiglia', 'Bacheca familiare', 'Pubblica per tutti', 'Segna tutto come letto', 'vf-seen-updates-v1']) assert.match(app, new RegExp(value))
   assert.match(app, /familyInviteHash = '[a-f0-9]{64}'/)
+  assert.match(schema, /author_id = auth\.uid\(\)/)
+  assert.match(schema, /enable row level security/)
 })
