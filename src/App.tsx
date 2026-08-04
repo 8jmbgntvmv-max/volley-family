@@ -3,7 +3,7 @@ import './App.css'
 import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
-import { buildUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
+import { buildUpdateItems, unreadUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
@@ -195,7 +195,8 @@ function UpdatesCenter({ updates, seenIds, preferences, chatUrl, onPreferences, 
 }) {
   const [chatDraft, setChatDraft] = useState(chatUrl)
   const [chatError, setChatError] = useState('')
-  const unreadCount = updates.filter((item) => !seenIds.has(item.id)).length
+  const pendingUpdates = unreadUpdateItems(updates, seenIds)
+  const unreadCount = pendingUpdates.length
   const toggleKind = (kind: UpdateKind) => onPreferences({ ...preferences, [kind]: !preferences[kind] })
   const toggleTeam = (team: TeamId) => onPreferences({ ...preferences, teams: { ...preferences.teams, [team]: !preferences.teams[team] } })
   const saveChat = () => {
@@ -207,7 +208,7 @@ function UpdatesCenter({ updates, seenIds, preferences, chatUrl, onPreferences, 
   return <section className="page updates-page"><p className="eyebrow">Controllo aggiornamenti</p><div className="updates-page-heading"><div><h2>Novità</h2><p>{unreadCount ? `${unreadCount} da leggere` : 'Sei in pari con gli aggiornamenti'}</p></div>{unreadCount > 0 && <button onClick={onMarkAll}>Segna tutto come letto</button>}</div>
     <article className="updates-settings"><details><summary><div><strong>Cosa vuoi seguire</strong><small>Le preferenze restano salvate su questo telefono</small></div><b>＋</b></summary><div className="preference-group"><span>Tipologia</span><div>{(Object.keys(updateKindLabels) as UpdateKind[]).map((kind) => <label key={kind}><input type="checkbox" checked={preferences[kind]} onChange={() => toggleKind(kind)} />{updateKindLabels[kind]}</label>)}</div></div><div className="preference-group"><span>Squadre</span><div>{teams.map((team) => <label key={team.id}><input type="checkbox" checked={preferences.teams[team.id]} onChange={() => toggleTeam(team.id)} />{team.shortName}</label>)}</div></div></details></article>
     <article className="family-chat-card"><div className="chat-card-heading"><span>WA</span><div><strong>Chat famiglia</strong><small>Si apre direttamente il gruppo WhatsApp</small></div>{chatUrl && <a href={chatUrl} target="_blank" rel="noreferrer">Apri</a>}</div><label htmlFor="whatsapp-link">Link d’invito del gruppo</label><div className="chat-link-form"><input id="whatsapp-link" type="url" value={chatDraft} onChange={(event) => setChatDraft(event.target.value)} placeholder="https://chat.whatsapp.com/…" /><button onClick={saveChat}>Salva</button></div>{chatError && <p className="chat-error">{chatError}</p>}<p>Il collegamento resta soltanto su questo dispositivo e non viene pubblicato su GitHub.</p></article>
-    <div className="updates-list">{updates.slice(0, 60).map((item) => <UpdateRow key={item.id} item={item} unread={!seenIds.has(item.id)} onRead={onMarkRead} onOpenResults={onOpenResults} />)}{updates.length === 0 && <div className="detail-empty"><strong>Nessun aggiornamento per i filtri scelti</strong><span>Puoi modificare le preferenze qui sopra.</span></div>}</div>
+    <div className="updates-list">{pendingUpdates.slice(0, 60).map((item) => <UpdateRow key={item.id} item={item} unread onRead={onMarkRead} onOpenResults={onOpenResults} />)}{pendingUpdates.length === 0 && <div className="detail-empty"><strong>Nessun nuovo aggiornamento</strong><span>Le notizie già lette restano disponibili nella sezione News.</span></div>}</div>
   </section>
 }
 
