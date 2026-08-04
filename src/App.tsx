@@ -4,15 +4,17 @@ import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
-import { rosters } from './data/rosters'
+import { rosters, type RosterPlayer } from './data/rosters'
 
 type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'rules'
 type AthleteId = 'chiara-lupoli' | 'camilla-lupoli' | 'luca-loreti'
 type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[]; summary?: string; matchFocus?: MatchFocus }
 type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[] }
 type ResultsByMatch = Record<string, MatchResult>
-type LeagueTeamData = { source: string; season: string; links: { results?: string; standings?: string; statistics?: string }; standing: null | { position?: number; points?: number; played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; stats: null | { played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number } }
+type PlayerStats = { name: string; profileUrl?: string; appearances?: number | null; points?: number | null; attacks?: number | null; attackPoints?: number | null; attackPercentage?: number | null; serves?: number | null; aces?: number | null; blocks?: number | null; serveErrors?: number | null; perfectReceptions?: number | null }
+type LeagueTeamData = { source: string; season: string; links: { results?: string; standings?: string; statistics?: string }; standing: null | { position?: number; points?: number; played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; stats: null | { played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; players?: PlayerStats[] }
 type LeagueData = { updatedAt: string | null; teams: Record<TeamId, LeagueTeamData> }
+type SelectedAthlete = { team: TeamId; player: RosterPlayer }
 const nav: { id: Screen; label: string; icon: string }[] = [
   { id: 'home', label: 'Home', icon: '⌂' }, { id: 'agenda', label: 'Confronto', icon: '▦' },
   { id: 'teams', label: 'Squadre', icon: '●' }, { id: 'news', label: 'News', icon: '◉' },
@@ -32,6 +34,7 @@ const longDate = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numer
 const dateLabel = (value: string) => longDate.format(new Date(`${value}T12:00:00`))
 const scoreLabel = (result: MatchResult) => `${result.firstTeamSets}–${result.secondTeamSets}`
 const setsLabel = (result: MatchResult) => result.sets.map((set) => `${set.first}-${set.second}`).join(', ')
+const normalized = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('it').replace(/[^a-z0-9]+/g, ' ').trim()
 
 function MatchRow({ match, result }: { match: Match; result?: MatchResult }) {
   const team = teams.find((item) => item.id === match.team)!
@@ -99,11 +102,45 @@ function HomeMatchFocus({ news, onOpenNews }: { news: NewsItem[]; onOpenNews: ()
   </section>
 }
 
-function HomeRosters() {
+function HomeRosters({ onSelectAthlete }: { onSelectAthlete: (athlete: SelectedAthlete) => void }) {
   return <section className="home-dashboard" aria-labelledby="home-rosters-title"><div className="dashboard-heading"><div><p className="eyebrow">Stagione 2026/27</p><h2 id="home-rosters-title">Roster</h2></div></div><p className="dashboard-note">Sono mostrati soltanto i nomi già annunciati. Le rose incomplete si aggiornano con le comunicazioni delle società.</p><div className="roster-grid">{rosters.map((roster) => {
     const team = teams.find((candidate) => candidate.id === roster.team)!
-    return <details className="roster-card" key={roster.team}><summary><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><strong>{team.shortName}</strong><small>{roster.status === 'complete' ? `${roster.players.length} atleti · completo` : `${roster.players.length} annunciati · in aggiornamento`}</small></div><b>＋</b></summary><div className="roster-list">{roster.players.map((player) => <div className={player.followed ? 'followed' : ''} key={player.name}><span>{player.name}{player.followed && <i>SEGUITO</i>}</span><small>{player.role ?? 'Ruolo da pubblicare'}</small></div>)}</div><a className="roster-source" href={roster.sourceUrl} target="_blank" rel="noreferrer">{roster.sourceLabel}</a></details>
+    const countLabel = roster.team === 'altino' ? '13 atlete · roster presentato' : roster.status === 'complete' ? `${roster.players.length} atleti · completo` : `${roster.players.length} annunciati · in aggiornamento`
+    return <details className="roster-card" key={roster.team}><summary><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><strong>{team.shortName}</strong><small>{countLabel}</small></div><b>＋</b></summary><div className="roster-list">{roster.players.map((player) => <button className={player.followed ? 'followed' : ''} key={player.name} onClick={() => onSelectAthlete({ team: roster.team, player })}><span>{player.name}{player.followed && <i>SEGUITO</i>}</span><small>{player.role ?? 'Ruolo da pubblicare'}</small><b aria-hidden="true">›</b></button>)}</div><a className="roster-source" href={roster.sourceUrl} target="_blank" rel="noreferrer">{roster.sourceLabel}</a></details>
   })}</div></section>
+}
+
+function AthleteDetail({ selected, news, leagueData, onClose }: { selected: SelectedAthlete; news: NewsItem[]; leagueData: LeagueData | null; onClose: () => void }) {
+  const { player, team: teamId } = selected
+  const team = teams.find((candidate) => candidate.id === teamId)!
+  const mentions = news.filter((item) => {
+    const text = normalized(`${item.title} ${item.summary ?? ''}`)
+    return item.team === teamId && text.includes(normalized(player.name))
+  }).slice(0, 8)
+  const official = leagueData?.teams[teamId]
+  const personalStats = official?.players?.find((candidate) => normalized(candidate.name) === normalized(player.name))
+  const statItems = personalStats ? [
+    ['Presenze', personalStats.appearances], ['Punti', personalStats.points], ['Punti attacco', personalStats.attackPoints],
+    ['Efficienza attacco', personalStats.attackPercentage == null ? null : `${personalStats.attackPercentage}%`], ['Ace', personalStats.aces], ['Muri', personalStats.blocks],
+  ].filter((item) => item[1] !== null && item[1] !== undefined) : []
+  const pressUrl = `https://news.google.com/search?q=${encodeURIComponent(`"${player.name}" pallavolo`)}&hl=it&gl=IT&ceid=IT:it`
+  const socialLinks = Object.entries(sources[teamId]).filter(([label]) => label !== 'site')
+
+  return <div className="athlete-detail-overlay" role="dialog" aria-modal="true" aria-labelledby="athlete-detail-title" onClick={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <article className="athlete-detail">
+      <header className="athlete-detail-header"><button className="detail-close" onClick={onClose} aria-label="Chiudi la scheda atleta">‹</button><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><p>{team.shortName}</p><h2 id="athlete-detail-title">{player.name}</h2><span>{player.role ?? 'Ruolo da pubblicare'}</span></div></header>
+      <div className="athlete-detail-body">
+        <section><p className="eyebrow">Profilo</p><div className="profile-facts">
+          <div><small>Nascita</small><strong>{player.birthDate ?? (player.birthYear ? `Classe ${player.birthYear}` : 'Da pubblicare')}</strong></div>
+          <div><small>Altezza</small><strong>{player.height ? `${player.height} cm` : 'Da pubblicare'}</strong></div>
+          <div><small>Nazionalità</small><strong>{player.nationality ?? 'Da pubblicare'}</strong></div>
+        </div>{player.profileUrl && <a className="primary-detail-link" href={player.profileUrl} target="_blank" rel="noreferrer">{player.profileSource ?? 'Profilo ufficiale'}</a>}</section>
+        <section><p className="eyebrow">Statistiche personali</p>{statItems.length ? <div className="personal-stats">{statItems.map(([label, value]) => <div key={label}><strong>{value}</strong><small>{label}</small></div>)}</div> : <div className="detail-empty"><strong>Dati non ancora pubblicati</strong><span>Le statistiche compariranno qui dopo la pubblicazione ufficiale della competizione.</span></div>}{(personalStats?.profileUrl || official?.links.statistics) && <a className="secondary-detail-link" href={personalStats?.profileUrl ?? official?.links.statistics} target="_blank" rel="noreferrer">Apri le statistiche ufficiali</a>}</section>
+        <section><div className="detail-section-heading"><p className="eyebrow">Stampa e articoli</p><a href={pressUrl} target="_blank" rel="noreferrer">Cerca altre notizie</a></div>{mentions.length ? <div className="athlete-detail-news">{mentions.map((item) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id}><small>{item.source} · {dateLabel(item.publishedAt.slice(0, 10))}</small><strong>{item.title}</strong></a>)}</div> : <div className="detail-empty"><strong>Nessun articolo trovato nell’archivio</strong><span>La ricerca automatica continua con i prossimi aggiornamenti.</span></div>}</section>
+        <section><p className="eyebrow">Social ufficiali della squadra</p><div className="detail-socials">{socialLinks.map(([label, url]) => <a href={url} target="_blank" rel="noreferrer" key={label}>{label[0].toUpperCase() + label.slice(1)}</a>)}</div><p className="social-note">I post personali compaiono tra gli articoli quando sono accessibili pubblicamente; i pulsanti aprono i canali ufficiali della società.</p></section>
+      </div>
+    </article>
+  </div>
 }
 
 function HomeResultsAndStandings({ results, leagueData }: { results: ResultsByMatch; leagueData: LeagueData | null }) {
@@ -153,6 +190,7 @@ function App() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [results, setResults] = useState<ResultsByMatch>({})
   const [leagueData, setLeagueData] = useState<LeagueData | null>(null)
+  const [selectedAthlete, setSelectedAthlete] = useState<SelectedAthlete | null>(null)
   const weekends = useMemo(() => groupByWeekend(matches), [])
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}news.json`).then((response) => response.json()).then((data) => setNews(data.items ?? [])).catch(() => setNews([]))
@@ -165,7 +203,7 @@ function App() {
       {screen === 'home' && <>
         <section className="hero-card"><p className="eyebrow light">Agenda condivisa</p><h2>Tutte le partite, senza suggerimenti</h2><p>Consulta liberamente gare in casa e trasferte di Altino, Matese e Perugia.</p><button onClick={() => setScreen('agenda')}>Apri i calendari</button></section>
         <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
-        <HomeRosters />
+        <HomeRosters onSelectAthlete={setSelectedAthlete} />
         <HomeResultsAndStandings results={results} leagueData={leagueData} />
         <HomeStatistics results={results} leagueData={leagueData} />
         <section className="section-block"><div className="section-title"><div><p className="eyebrow">Le tue squadre</p><h2>Tre campionati, un’unica agenda</h2></div><button className="text-button" onClick={() => setScreen('teams')}>Vedi tutte</button></div>
@@ -178,6 +216,7 @@ function App() {
       {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div></section>}
     </main>
+    {selectedAthlete && <AthleteDetail selected={selectedAthlete} news={news} leagueData={leagueData} onClose={() => setSelectedAthlete(null)} />}
     <nav className="bottom-nav" aria-label="Navigazione principale">{nav.map((item) => <button key={item.id} className={screen === item.id ? 'active' : ''} onClick={() => setScreen(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav>
   </div>
 }
