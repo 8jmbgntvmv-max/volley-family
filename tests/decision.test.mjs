@@ -15,7 +15,7 @@ import { athleteMediaLinks } from '../src/lib/athlete-media.mjs'
 import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
 import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from '../src/lib/weekend-volley.mjs'
 import { newsSourceCatalog, searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
-import { instagramVolleyItems } from '../src/lib/instagram-news.mjs'
+import { instagramOembedItem, instagramVolleyItems } from '../src/lib/instagram-news.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -113,6 +113,19 @@ test('estrae soltanto le pubblicazioni volley dal profilo pubblico Matese', () =
   assert.equal(items.length, 1)
   assert.equal(items[0].url, 'https://www.instagram.com/p/VOLLEY1/')
   assert.equal(items[0].image, 'https://example.test/atleta.jpg')
+})
+test('trasforma il post ufficiale Matese in una news con anteprima', () => {
+  const item = instagramOembedItem({
+    title: '🏐 CAROLA NASI ANCORA CON NOI! La Polisportiva Matese conferma il libero per la Serie B2.',
+    media_id: '3956350959856672093_3063055134',
+    thumbnail_url: 'https://example.test/carola-nasi.jpg',
+  }, {
+    team: 'matese', source: 'Instagram ufficiale Matese',
+    url: 'https://www.instagram.com/p/DbnyDyBCF1d/', publishedAt: '2026-08-04T14:30:08.859Z',
+  })
+  assert.equal(item.id, 'matese-instagram-3956350959856672093')
+  assert.equal(item.title, 'CAROLA NASI ANCORA CON NOI!')
+  assert.equal(item.image, 'https://example.test/carola-nasi.jpg')
 })
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')

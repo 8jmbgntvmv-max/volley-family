@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-05T12:06:28.845Z",
+  "updatedAt": "2026-08-05T12:30:36.451Z",
   "sources": [
     {
       "id": "matese-curated",
@@ -8,7 +8,7 @@
       "url": "https://www.puntosportstadio.it/",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 3
     },
     {
@@ -18,7 +18,7 @@
       "url": "",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 1
     },
     {
@@ -28,7 +28,7 @@
       "url": "https://www.altinovolley.it/",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 30
     },
     {
@@ -38,8 +38,18 @@
       "url": "https://www.sirsafetyperugia.it/new/",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
+    },
+    {
+      "id": "matese-instagram-public",
+      "team": "matese",
+      "label": "Instagram pubblico Matese",
+      "url": "https://www.instagram.com/polisportivamatese/",
+      "mode": "automatic",
+      "status": "ok",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
+      "itemsFound": 1
     },
     {
       "id": "matese-guiscards",
@@ -48,7 +58,7 @@
       "url": "https://www.guiscards.it/",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -58,7 +68,7 @@
       "url": "https://www.sportcasertano.it/",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -68,7 +78,7 @@
       "url": "https://www.puntosportstadio.it/",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -78,7 +88,7 @@
       "url": "https://www.volleycloud.it/",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -88,7 +98,7 @@
       "url": "https://news.google.com/rss/search?q=%22Altino%20Volley%22%20pallavolo&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -98,7 +108,7 @@
       "url": "https://news.google.com/rss/search?q=%22Polisportiva%20Matese%22%20pallavolo%20OR%20volley&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -108,7 +118,7 @@
       "url": "https://news.google.com/rss/search?q=%22Sir%20Susa%20Scai%20Perugia%22%20volley%20OR%20pallavolo&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -118,7 +128,7 @@
       "url": "https://news.google.com/rss/search?q=%22Altino%20Volley%22%20pallavolo%20(site%3Avolleynews.it%20OR%20site%3Avolleyball.it%20OR%20site%3Aivolleymagazine.it%20OR%20site%3Adallarivolley.com%20OR%20site%3Asupervolley.eu%20OR%20site%3Aworldofvolley.com)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -128,7 +138,7 @@
       "url": "https://news.google.com/rss/search?q=%22Altino%20Volley%22%20pallavolo%20(site%3Agazzetta.it%20OR%20site%3Acorrieredellosport.it%20OR%20site%3Atuttosport.com%20OR%20site%3Afedervolley.it%20OR%20site%3Alegavolleyfemminile.it%20OR%20site%3Aen.volleyballworld.com)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -138,7 +148,7 @@
       "url": "https://news.google.com/rss/search?q=%22Altino%20Volley%22%20pallavolo%20(site%3Arete8.it%20OR%20site%3Aabruzzonews.eu%20OR%20site%3Avasport.it%20OR%20site%3Afipavabruzzo.it)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -148,8 +158,8 @@
       "url": "https://news.google.com/rss/search?q=%22Polisportiva%20Matese%22%20pallavolo%20(site%3Avolleynews.it%20OR%20site%3Avolleyball.it%20OR%20site%3Aivolleymagazine.it%20OR%20site%3Adallarivolley.com%20OR%20site%3Asupervolley.eu%20OR%20site%3Aworldofvolley.com)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
-      "itemsFound": 1
+      "checkedAt": "2026-08-05T12:30:36.451Z",
+      "itemsFound": 0
     },
     {
       "id": "catalog-matese-2",
@@ -158,7 +168,7 @@
       "url": "https://news.google.com/rss/search?q=%22Polisportiva%20Matese%22%20pallavolo%20(site%3Agazzetta.it%20OR%20site%3Acorrieredellosport.it%20OR%20site%3Atuttosport.com%20OR%20site%3Afedervolley.it%20OR%20site%3Aen.volleyballworld.com%20OR%20site%3Apallavolo.it)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -168,7 +178,7 @@
       "url": "https://news.google.com/rss/search?q=%22Polisportiva%20Matese%22%20pallavolo%20(site%3Acsicampania.it%20OR%20site%3Apgscampania.it%20OR%20site%3Afipavcampania.it)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -178,7 +188,7 @@
       "url": "https://news.google.com/rss/search?q=%22Sir%20Perugia%22%20volley%20(site%3Avolleynews.it%20OR%20site%3Avolleyball.it%20OR%20site%3Aivolleymagazine.it%20OR%20site%3Adallarivolley.com%20OR%20site%3Asupervolley.eu%20OR%20site%3Aworldofvolley.com)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -188,7 +198,7 @@
       "url": "https://news.google.com/rss/search?q=%22Sir%20Perugia%22%20volley%20(site%3Agazzetta.it%20OR%20site%3Acorrieredellosport.it%20OR%20site%3Atuttosport.com%20OR%20site%3Afedervolley.it%20OR%20site%3Aen.volleyballworld.com%20OR%20site%3Apianetavolley.net)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -198,7 +208,7 @@
       "url": "https://news.google.com/rss/search?q=%22Sir%20Perugia%22%20volley%20(site%3Avolleyumbria.it%20OR%20site%3Afipavumbria.it%20OR%20site%3Aumbria24.it%20OR%20site%3Atuttoggi.info)&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 8
     },
     {
@@ -208,7 +218,7 @@
       "url": "https://news.google.com/rss/search?q=%22Chiara%20Lupoli%22%20pallavolo&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -218,7 +228,7 @@
       "url": "https://news.google.com/rss/search?q=%22Camilla%20Lupoli%22%20pallavolo&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 6
     },
     {
@@ -228,7 +238,7 @@
       "url": "https://news.google.com/rss/search?q=%22Luca%20Loreti%22%20pallavolo&hl=it&gl=IT&ceid=IT:it",
       "mode": "automatic",
       "status": "ok",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 6
     },
     {
@@ -238,7 +248,7 @@
       "url": "https://www.facebook.com/altinovolley/",
       "mode": "direct",
       "status": "link-only",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -248,7 +258,7 @@
       "url": "https://www.instagram.com/altinovolley.official/",
       "mode": "direct",
       "status": "link-only",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -258,17 +268,7 @@
       "url": "https://www.facebook.com/polisportiva.matese",
       "mode": "direct",
       "status": "link-only",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
-      "itemsFound": 0
-    },
-    {
-      "id": "matese-instagram",
-      "team": "matese",
-      "label": "Instagram Matese",
-      "url": "https://www.instagram.com/polisportivamatese/",
-      "mode": "direct",
-      "status": "link-only",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -278,7 +278,7 @@
       "url": "https://www.facebook.com/SirSafetyPerugiaVolley/",
       "mode": "direct",
       "status": "link-only",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     },
     {
@@ -288,13 +288,33 @@
       "url": "https://www.instagram.com/sirsafetyperugia/",
       "mode": "direct",
       "status": "link-only",
-      "checkedAt": "2026-08-05T12:06:28.845Z",
+      "checkedAt": "2026-08-05T12:30:36.451Z",
       "itemsFound": 0
     }
   ],
   "items": [
     {
-      "id": "altino-Ricerca notizie-3-2026-08-03T15:22:32.000Z",
+      "id": "perugia-official-0-05/08/2026",
+      "team": "perugia",
+      "title": "KAMIL SEMENIUK: «NON VEDO L’ORA DI TORNARE A PERUGIA E GIOCARE SUL TARAFLEX TRICOLORE!»",
+      "url": "https://www.sirsafetyperugia.it/new/kamil-semeniuk-non-vedo-lora-di-tornare-a-perugia-e-giocare-sul-taraflex-tricolore",
+      "source": "Sito ufficiale",
+      "publishedAt": "2026-08-05T12:00:00.000Z",
+      "image": "https://www.sirsafetyperugia.it/assets/img/news/_thumb/sirci_semeniuk.jpg"
+    },
+    {
+      "id": "matese-instagram-3956350959856672093",
+      "team": "matese",
+      "title": "CAROLA NASI ANCORA CON NOI!",
+      "url": "https://www.instagram.com/p/DbnyDyBCF1d/",
+      "source": "Instagram ufficiale Matese",
+      "publishedAt": "2026-08-04T14:30:08.859Z",
+      "image": "https://instagram.fnap7-2.fna.fbcdn.net/v/t39.30808-6/763671752_1690260739770476_5016678260687737098_n.jpg?stp=dst-jpg_e35_p640x640_sh2.08_tt6&_nc_ht=instagram.fnap7-2.fna.fbcdn.net&_nc_cat=108&_nc_oc=Q6cZ2gFtTxgiqlUaIvGMvhE9N3m9O7uBYpMRBcMNCIcpXctC_EZtaV6muiHDjiyhlhqE7-H4EEEUmo7jvUEqxf5ERnyz&_nc_ohc=2uvRYf3fnAIQ7kNvwHW6vcN&_nc_gid=OQNtRpO9scQELJN5-sBTxw&edm=ALY_pVYAAAAA&ccb=7-5&oh=00_AQFo2b3tbNABjfGovW4WNcaRbRpqgeW_dUl0wWhJm_v7ug&oe=6A7914C7&_nc_sid=57e406",
+      "summary": "🏐 CAROLA NASI ANCORA CON NOI! La Polisportiva Matese è lieta di annunciare la conferma di Carola Nasi, libero, classe 2001, che vestirà ancora la maglia biancoverde nella stagione 2026/2027. Dopo una stagione segnata da un lungo percorso di recupero, Carola ha scelto di proseguire il proprio cammino con la Polisportiva Matese, confermando il forte legame costruito con la società e con tutto l’ambiente biancoverde. Una scelta che racconta fiducia, appartenenza e la voglia di tornare protagonista",
+      "matchFocus": "availability"
+    },
+    {
+      "id": "altino-Ricerca notizie-2-2026-08-03T15:22:32.000Z",
       "team": "altino",
       "title": "Il mercato del volley. L’Altino firma un altro colpo: presa la palleggiatrice Lupoli - il Centro",
       "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPZEVfdWVQd0pGQm5NV3M5dTVlTTRJd2dFM29WRldPX1FOQWNfWFlfMjZzVFgzU0hFOEZQV1JsUkFOa3VFRmxRekk0Q1llRm1yV1c2aExuTVZWdE95LUNHQy16ZUZyWTc0NEhRV2h1QlNQVExvX3hYeXFwcjNhTU8yUmFnRng0NEE4MHZGdkZGUm5fWlRaQ1cwbjZiamRJSzhFRDJ5MnhVMkM2eXo4NjlyODczRkJ0VV9WSHhBNQ?oc=5",
@@ -316,7 +336,7 @@
       "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMiigFBVV95cUxONU1SRUV0Y0hxNVRmaXVfLVEtMEJJZGxDN2MyNDlOLU9pSnB4RGZUMjRlOEFtRjNuTTE1NDZKYThWVm53VHhUWWJxMUZFYURoVzRYV19tRUhiS2dzMElvRWxsdE10NmhEX21kYnl2NnNkZGtvNk1xVDFXZGtKWTNDWmpMaklxekxfc2c?oc=5\" target=\"_blank\"&gt;IL PALAZZETTO DI PERUGIA SI VESTE DI TRICOLORE!&lt;/a&gt;&nbsp;&nbsp;&lt;font color=\"#6f6f6f\"&"
     },
     {
-      "id": "perugia-official-0-03/08/2026",
+      "id": "perugia-official-1-03/08/2026",
       "team": "perugia",
       "title": "IL PALAZZETTO DI PERUGIA SI VESTE DI TRICOLORE!",
       "url": "https://www.sirsafetyperugia.it/new/il-palazzetto-di-perugia-si-veste-di-tricolore",
@@ -348,7 +368,7 @@
       "summary": "La regista classe 2003 vestirà la maglia di Altino Volley nel prossimo campionato di Serie A2 femminile L’Altino Volley comunica l’arrivo di Camilla Lupoli, palleggiatrice classe 2003, che completa il reparto delle registe rossoblù per la prossima stagione sportiva nel campionato di Serie A2 femminile. Originaria di Roma e alta 175 cm, Lupoli è una&#8230;"
     },
     {
-      "id": "perugia-official-1-02/08/2026",
+      "id": "perugia-official-2-02/08/2026",
       "team": "perugia",
       "title": "NOTA STAMPA SIR SUSA SCAI PERUGIA del 02/08/2026",
       "url": "https://www.sirsafetyperugia.it/new/nota-stampa-sir-susa-scai-perugia-del-02-08-2026",
@@ -378,14 +398,14 @@
     {
       "id": "altino-Ricerca notizie-2-2026-07-30T23:04:29.000Z",
       "team": "altino",
-      "title": "Ultime partite - Lega Volley Femminile",
+      "title": "Ultime partite - Lega Pallavolo Serie A Femminile",
       "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE82eE5UZV9WOEx4VFZIejRRY204dmZ1dnNUV1NxdC00OEcxSjBVS09VX1RNejFReElwLWdlUHh0ZW53a1ExVDFWUlNmdlpEUTVCR0s2a2lScThWMUlQWU1FWURUdUMtUFhsMU1mTWYtWXg?oc=5",
       "source": "Ricerca notizie",
       "publishedAt": "2026-07-30T23:04:29.000Z",
       "athleteIds": [
         "camilla-lupoli"
       ],
-      "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMicEFVX3lxTE82eE5UZV9WOEx4VFZIejRRY204dmZ1dnNUV1NxdC00OEcxSjBVS09VX1RNejFReElwLWdlUHh0ZW53a1ExVDFWUlNmdlpEUTVCR0s2a2lScThWMUlQWU1FWURUdUMtUFhsMU1mTWYtWXg?oc=5\" target=\"_blank\"&gt;Ultime partite&lt;/a&gt;&nbsp;&nbsp;&lt;font color=\"#6f6f6f\"&gt;Lega Volley Femminile&lt;/font&gt;"
+      "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMicEFVX3lxTE82eE5UZV9WOEx4VFZIejRRY204dmZ1dnNUV1NxdC00OEcxSjBVS09VX1RNejFReElwLWdlUHh0ZW53a1ExVDFWUlNmdlpEUTVCR0s2a2lScThWMUlQWU1FWURUdUMtUFhsMU1mTWYtWXg?oc=5\" target=\"_blank\"&gt;Ultime partite&lt;/a&gt;&nbsp;&nbsp;&lt;font color=\"#6f6f6f\"&gt;Lega Pallavolo Serie A Femminile&lt;/font&gt;"
     },
     {
       "id": "perugia-official-2-30/07/2026",
@@ -625,9 +645,19 @@
       "summary": "Il libero classe 2006 vestirà la maglia di Altino Volley nel prossimo campionato di Serie A2 femminile Nata il 19 febbraio 2006 in provincia di Pescara e alta 175 cm, Maiezza è un giovane talento abruzzese che approda ad Altino con un percorso già significativo alle spalle. Libero di prospettiva, unisce qualità tecniche, personalità e&#8230;"
     },
     {
-      "id": "altino-Catalogo media altino · gruppo 1-1-2026-06-25T07:00:00.000Z",
+      "id": "altino-Catalogo media altino · gruppo 1-3-2026-06-25T07:00:00.000Z",
       "team": "altino",
       "title": "Pallavolo Germania – Julia Murmann (ex Altino) è una nuova giocatrice del Wiesbaden - iVolley Magazine",
+      "url": "https://news.google.com/rss/articles/CBMivwFBVV95cUxPYVpWTHNUZ2lkdmhyRDduSkJES2ZGcEI3UGN4YUZHNEp0QmtQckF4WDBpVTg1bmVPNHlCcV90Q01Yd1NNUUlHT1d1NUlNVWc0a3FITVlnSmV3LVlBbG5IQlpCYVluNFdaQlcxQWhlR1dZdi1JXzJWSS1hQnYxcDc4VEJCcEVxbVpmYm9oaW9BQU14anVTS29LVUhXeWI2emt6aFZPZ1dwZnF4RS1weGN5X0hZV2gtNDJkdjZQdEdIZ9IBxwFBVV95cUxPZjAza2NwWHNQYVQxMERVREJrU1FGdzFXMEZkcDJFV2ZBanZWSFZxM3BOUzk0eGdEZVhLQjFad3U3cnVpWUNLWnUzendldFIzNlcxX1I3M1NwN2c2NGo3V2ZRMXp0TS0xYVpoWXA4TVdkOVNqMG14NXdYVjhrZDNnT3VyLUVRVFBQWGJtTWJfOEtleTZCY0VJcDZDemt5OGNhcmRmTmxTVktURkF4UVRKR0NlaV9obWNrR1RGZl9tcVhvWjRYZGxN?oc=5",
+      "source": "Catalogo media altino · gruppo 1",
+      "publishedAt": "2026-06-25T07:00:00.000Z",
+      "image": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300",
+      "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMivwFBVV95cUxPYVpWTHNUZ2lkdmhyRDduSkJES2ZGcEI3UGN4YUZHNEp0QmtQckF4WDBpVTg1bmVPNHlCcV90Q01Yd1NNUUlHT1d1NUlNVWc0a3FITVlnSmV3LVlBbG5IQlpCYVluNFdaQlcxQWhlR1dZdi1JXzJWSS1hQnYxcDc4VEJCcEVxbVpmYm9oaW9BQU14anVTS29LVUhXeWI2emt6aFZPZ1dwZnF4RS1weGN5X0hZV2gtNDJkdjZQdEdIZ9IBxwFBVV95cUxPZjAza2NwWHNQYVQxMERVREJrU1FGdzFXMEZ"
+    },
+    {
+      "id": "altino-Catalogo media altino · gruppo 1-1-2026-06-25T07:00:00.000Z",
+      "team": "altino",
+      "title": "Pallavolo Germania – Julia Murmann (ex Altino) è una nuova giocatrice del Wiesbaden - ivolleymagazine.it",
       "url": "https://news.google.com/rss/articles/CBMivwFBVV95cUxPYVpWTHNUZ2lkdmhyRDduSkJES2ZGcEI3UGN4YUZHNEp0QmtQckF4WDBpVTg1bmVPNHlCcV90Q01Yd1NNUUlHT1d1NUlNVWc0a3FITVlnSmV3LVlBbG5IQlpCYVluNFdaQlcxQWhlR1dZdi1JXzJWSS1hQnYxcDc4VEJCcEVxbVpmYm9oaW9BQU14anVTS29LVUhXeWI2emt6aFZPZ1dwZnF4RS1weGN5X0hZV2gtNDJkdjZQdEdIZw?oc=5",
       "source": "Catalogo media altino · gruppo 1",
       "publishedAt": "2026-06-25T07:00:00.000Z",
@@ -701,7 +731,7 @@
       "summary": "La Polisportiva Matese saluta coach Mario Scappaticcio. Dopo anni di lavoro, sacrifici e passione, si conclude l’esperienza del tecnico alla guida della formazione femminile di Serie B2, protagonista di un percorso significativo per la crescita del movimento pallavolistico matesino. Un capitolo importante che si chiude, fatto di impegno quotidiano, evoluzion"
     },
     {
-      "id": "perugia-Media: Sir Perugia-7-2026-06-18T07:00:00.000Z",
+      "id": "perugia-Media: Sir Perugia-8-2026-06-18T07:00:00.000Z",
       "team": "perugia",
       "title": "DAVID KOLLÁTOR È IL SECONDO OPPOSTO DELLA SIR SUSA SCAI PERUGIA: «QUI PER REALIZZARE I MIEI SOGNI» - SIR Safety Perugia Volley",
       "url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxNUHBIN3dIZzgycy1ycjhQblRla2FCSVowUjkzRk9iMXBEeTdmdzBkVUN2UkloNG5SUzI4SGRGaWV3MmxxRjJETGRCWFR0SHVNd0laNWtVUUVXYUY4ajRmdXRrR1J2a3JKR05mYWRsdzRDdjdUdlVlUE9RTmtfRWNHZzNOcGdqVWRvVTR6Y1BTcmdIMDZLYlZEajREMzU3WVpzOGt5Z01Ma19xS2dINmlCVV9pN3RPVXFicjExSk1JZGE0NHRxVm1PT2ptNA?oc=5",
@@ -721,7 +751,7 @@
       "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMilwFBVV95cUxPbENHQjNqV0xoMzBrVmhTZGVKS0hNMDY0OEdZcUkxOHlOeV9NT1QyVFBPTE1QNWZKcEdEcEl1NGd2MHdaVkxNU3UzUUhoOEMwTEk3S2dvRW9JZGNqNHA1THE2Y2s0SjhnZHhUTjFHZy1KdnBLTngzM3Z5ZUJyMTU5ZXdFSkRhSnZPU2tqYzB6c25IT3F0U1Q4?oc=5\" target=\"_blank\"&gt;Da Perugia a Senigallia per il Memorial Marco Fratini&lt;/a&gt;&nbsp;&nbsp;&l"
     },
     {
-      "id": "altino-Catalogo media altino · gruppo 1-4-2026-06-14T07:00:00.000Z",
+      "id": "altino-Catalogo media altino · gruppo 1-5-2026-06-14T07:00:00.000Z",
       "team": "altino",
       "title": "Pallavolo Mercato – All’Altino Volley arriva Sara Stival - iVolley Magazine",
       "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxQdDgxUUxtVVVhMTIxblB3U3o2bDFRdUJqZEhBVjQ5alFWVTdzWHBNZlpXUEZDUWd5Q1QybmFPTjRwYlozVEhUN04tYU9VUzMzSzRqVDNkVEtJS1d1NVZZT21IV05YSFhZVlFvS1RqcGtPYTJlbkkxVkxhTE5WZlJxOVV0d1ZwRWgzWU55c21XM0c2aGVxV1dvbTNHVjY?oc=5",
@@ -793,6 +823,16 @@
       "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMihwFBVV95cUxNT0h1SXZNd21UWkJWUmwzdUdIdFhiNmZOYk03VHZJU0FKSVlaYzhLZWJoS2NKOTB4QTVXZWhNZmVGLTV4VE52N1piQk5kMFQyMHQ2SDhMUXNQN3c2cWIyVG1Iczl3OGNuRTIxUFd4WF90QmJOUUhXUEtlN090Z0d2TURXSFltMXM?oc=5\" target=\"_blank\"&gt;Perugia ha puntato sul libero Luca Loreti&lt;/a&gt;&nbsp;&nbsp;&lt;font color=\"#6f6f6f\"&gt;Pianeta"
     },
     {
+      "id": "perugia-Catalogo media perugia · gruppo 2-1-2026-06-06T07:00:00.000Z",
+      "team": "perugia",
+      "title": "Si conclude la fase di Spareggio con la qualificazione di Futura Volley Cordenons e Sir Perugia - FIPAV - C... - FIPAV - Comitato Regionale Toscana",
+      "url": "https://news.google.com/rss/articles/CBMikgJBVV95cUxPVzJaZHhyTk83NUVncV9Pa0kzRU9kZ2g5TmI2WVRNLXhHM1VZS1RsSUtlbUZLNUNHSmtySklyU0x6SFZ6dEdpMW5Ra1daRTd6UmFGRnUwYktfV0sydmdvQXNWRkJFdE1lR0t4M1UzYjZjeGlaMkVDTDBJSUhpSjJTM2w5VlBCOEJrOHhfZ0JXRUk4M01jeEpOS2tSd3AtY0RYVGVnWWFNMjlTVTVGdTAzMEp4UWZxYXczblg0cDNEVWNNOWUwaG5FWGlWR2VseEF2VEJRcDQ0Q2FPNTVjOTR6Z3BJbEV1R0ZnYk9YNy1tZkZESFRpcDFHRlFjdWs1Q0xIalpaX3lWZE1jUlRPU21SYmln0gGXAkFVX3lxTE9MdW9vSDlkSzI0dVJQbFhXRkw0X0JWUTFJREMyTjFlS3BXSEJsWUtrYmtyamlleXh2UXJsclR4R0pLcEhEQmJWd3hxUE52dS1La0w0MkkxSk8ybzA4Y2E4N3VzdGxiaU1yRFFUendGdDNzX2oyTTdQeHdPOVZLOU03ZTZEM01PTE81dThmclhlMmhGRnJ1VnlQbGpUR1dBOWhQTVJlRnI0N3IwcTRaMWpQd1lZWWhfS1VrcGszcm5tZ3BWWnFsMm5wLUtsTzRvSnYxRUdpYlVQQXRuSzVvemJyTFNwM1BkMDVweFZXelc5TFBtZDFreVNwdFVhQllVajJ5c1RKMG1wcXh5N0VsTWVQbkpya05iTQ?oc=5",
+      "source": "Catalogo media perugia · gruppo 2",
+      "publishedAt": "2026-06-06T07:00:00.000Z",
+      "image": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300",
+      "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMikgJBVV95cUxPVzJaZHhyTk83NUVncV9Pa0kzRU9kZ2g5TmI2WVRNLXhHM1VZS1RsSUtlbUZLNUNHSmtySklyU0x6SFZ6dEdpMW5Ra1daRTd6UmFGRnUwYktfV0sydmdvQXNWRkJFdE1lR0t4M1UzYjZjeGlaMkVDTDBJSUhpSjJTM2w5VlBCOEJrOHhfZ0JXRUk4M01jeEpOS2tSd3AtY0RYVGVnWWFNMjlTVTVGdTAzMEp4UWZxYXczblg0cDNEVWNNOWUwaG5FWGlWR2VseEF2VEJRcDQ0Q2FPNTVjOTR6Z3BJbEV"
+    },
+    {
       "id": "altino-official-12-2026-06-05T20:11:30",
       "team": "altino",
       "title": "GAIA FARELLI CONFERMATA: CONTINUITÀ E GIOVANE ENERGIA PER IL ROSTER ROSSOBLÙ",
@@ -843,7 +883,7 @@
       "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMigAFBVV95cUxNS1I4cmJSZGY1b2lhd2lVQldST2gxa2NHeHNibnF2a180cjlJcXlleEVzSFNWd0EwQkVHMnlMNXpfQjFpekdvYTlOWUVFUlBIMzhXdFVvNUk3Mk1nWmFLamxWRFZCdFRVZ1FhV1QwQ2dtQVAydC1nVXpIVkxXSFRNSw?oc=5\" target=\"_blank\"&gt;La Sir primeggia anche con l’Under 20&lt;/a&gt;&nbsp;&nbsp;&lt;font color=\"#6f6f6f\"&gt;volleyumbria.it&lt;/"
     },
     {
-      "id": "perugia-Media: Sir Perugia-12-2026-05-28T07:00:00.000Z",
+      "id": "perugia-Media: Sir Perugia-11-2026-05-28T07:00:00.000Z",
       "team": "perugia",
       "title": "UNDER 20: LA SIR SUSA SCAI PERUGIA PROTAGONISTA IN JUNIOR LEAGUE TRA LE OTTO MIGLIORI D’ITALIA! - SIR Safety Perugia Volley",
       "url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxPcGROS3h5Q2JyVndVU1I4NFFKLU9XVGxhNTREMjh4aVRUN1R6S0phWFZVMjB3M3B3ZWtTZVNaMmdYSjNnaVlrd2JhYUhIRHBuZS1SUDN3UDJMZkNramlTZUpCX05ETk5sY3pfSUpiazJFVk9aTGh4ajFKLTZBSGtvYm95T3ZNWXNxT09HYkJJRWtFREJkUHd2UmNxN3RPZVBMUGUxMFR5N211alplUzFOU2ZqYXJOTHQtYjdrUFlidVVOTFpfTkhj?oc=5",
@@ -862,46 +902,6 @@
       "summary": "Dal 9 giugno al 30 luglio, presso il Lido Acapulco di Vasto, prenderà il via l’attività estiva promossa da Altino Volley, società protagonista nel campionato nazionale di Serie A femminile. Gli allenamenti si terranno ogni martedì e giovedì, dalle 17:30 alle 19:30, e saranno rivolti alla fascia d’età dai 5 ai 18 anni. L’iniziativa rappresenta&#8230;",
       "image": "https://www.altinovolley.it/wp-content/uploads/2026/05/AV0911-228-scaled.jpg",
       "matchFocus": "pre"
-    },
-    {
-      "id": "altino-Media: Altino Volley-5-2026-05-22T07:00:00.000Z",
-      "team": "altino",
-      "title": "Pallavolo Mercato - Gabriele Tortorici nuovo tecnico dell'Altino Volley, con lui potrebbero arrivare anche Martina Ferrara e Claudia Provaroni - iVolley Magazine",
-      "url": "https://news.google.com/rss/articles/CBMijgJBVV95cUxQbzRwQ25qOV9feFFObmxIMjVSZ1A4bDBnelZabVRvUDluQ1VpdzZyMXd0cG1BbTFQM0JnLWhBYllQVmlZS25jRjhMdUN4b182dnZqNUdzYUduYTRFZTlOY2hrWXBXbG15RnJYU2V2V1g3UVFuUWYyX1VLMmRndWZWcE12dmVFNGUwSmpzQTBRczFiLXFDVmhHSlpYYnNoQnU3VTJTc2VkYURrU3JVU0taZjhmX1l0MlVMeWZoaEtMaHhKVzFvYjQ5amlLQktQdGQ4RWUyVHA2bko2LS1ETnJVT1JBamhDSncxYTQydEhIczdaNmwzRWRNWjV6NXVJbmJzZkRHNUhWcXZuNjhPbUE?oc=5",
-      "source": "Media: Altino Volley",
-      "publishedAt": "2026-05-22T07:00:00.000Z",
-      "image": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300",
-      "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMijgJBVV95cUxQbzRwQ25qOV9feFFObmxIMjVSZ1A4bDBnelZabVRvUDluQ1VpdzZyMXd0cG1BbTFQM0JnLWhBYllQVmlZS25jRjhMdUN4b182dnZqNUdzYUduYTRFZTlOY2hrWXBXbG15RnJYU2V2V1g3UVFuUWYyX1VLMmRndWZWcE12dmVFNGUwSmpzQTBRczFiLXFDVmhHSlpYYnNoQnU3VTJTc2VkYURrU3JVU0taZjhmX1l0MlVMeWZoaEtMaHhKVzFvYjQ5amlLQktQdGQ4RWUyVHA2bko2LS1ETnJVT1JBamh"
-    },
-    {
-      "id": "altino-official-15-2026-05-21T22:04:29",
-      "team": "altino",
-      "title": "LA SERIE A2 RIPARTE DALLA PANCHINA: GABRIELE TORTORICI È IL NUOVO HEAD COACH",
-      "url": "https://www.altinovolley.it/altinoripartedallapanchina/",
-      "source": "Sito ufficiale",
-      "publishedAt": "2026-05-21T22:04:29.000Z",
-      "summary": "L&#8217;Altino Volley comunica di aver affidato la guida tecnica della prima squadra a Gabriele Tortorici, che sarà il nuovo Head Coach rossoblù per la prossima stagione sportiva nel campionato di Serie A2 femminile. Romano, nato l’8 maggio 1985, Tortorici arriva ad Altino dopo un percorso professionale costruito tra settore giovanile d’eccellenza, Serie A, ",
-      "image": "https://www.altinovolley.it/wp-content/uploads/2026/05/gabbosito.png"
-    },
-    {
-      "id": "perugia-Media: Sir Perugia-6-2026-05-07T07:00:00.000Z",
-      "team": "perugia",
-      "title": "La Sir Susa Scai Perugia è campione d’Italia: triplete stagionale! - Lega Pallavolo Serie A",
-      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQWXRLMkEtb25wdUxnNzlqSEJIRDZTOU9oYldQY1dzU3pnbTJSc1ozeWZmWnlqZG1EbTdLU01tMXVyTUp3ck9pc2p5MkpBc0hrLWVoOGJjRFdmbVkwTEVpR1FmV0FPd3d0RXZNVmZOVmNsem5KWDZnTl80MXpfaElrSHhhWEloZXBXbFhMamVDNXM0ZFhHNC1RWmFYdw?oc=5",
-      "source": "Media: Sir Perugia",
-      "publishedAt": "2026-05-07T07:00:00.000Z",
-      "image": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300",
-      "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMimwFBVV95cUxQWXRLMkEtb25wdUxnNzlqSEJIRDZTOU9oYldQY1dzU3pnbTJSc1ozeWZmWnlqZG1EbTdLU01tMXVyTUp3ck9pc2p5MkpBc0hrLWVoOGJjRFdmbVkwTEVpR1FmV0FPd3d0RXZNVmZOVmNsem5KWDZnTl80MXpfaElrSHhhWEloZXBXbFhMamVDNXM0ZFhHNC1RWmFYdw?oc=5\" target=\"_blank\"&gt;La Sir Susa Scai Perugia è campione d’Italia: triplete stagionale!&lt;/"
-    },
-    {
-      "id": "perugia-Catalogo media perugia · gruppo 1-2-2026-05-07T07:00:00.000Z",
-      "team": "perugia",
-      "title": "Pallavolo SL Scudetto – Sir Susa Scai Perugia per la terza volta campione d’Italia: battuta ancora Civitanova - iVolley Magazine",
-      "url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxQX21uSFJFOHJLbWM5ekZQUDFEZVJya2lYVXl2ZkRPMmhTZ3BNaDBwcEhONlRiNG1OSklGM09UV09lVFlUcXpSemlBQnphcjJEbnFiWnNOR0FfV1E1UDBUTU1fbWduWnVxWXJRUmVpVzh6V0Y0dWtMNExVbWpXSTI2eVhFdGxDYlZkWGFTYy1hVHdLeng2dXNGQ041NEQ4OUVWMDJNOUVWLWNROURJZzAtVUxVQ0Y4TG5veGVTWEMwcnpzOE1jYVZaRUp3Rk5sSDl4MVZ1RXRZRktYOU16R1lRYjV30gHqAUFVX3lxTE9qQVFoNkFqNHJnMnhWWlFQM1BZZ29NdUptRk5VQlJubTZFYXhadmVkM2M2TjlRc1d2MXJlc0tFR29nWmFBMDVIZEoydEhkWGdkR1FkNVpxOHVOTGQweXI3TnRERVYxQVB4VXdrN2xyanFzc1FCRUJsQjRrUjRyOEtKWV9zUUpPTXVFdFBMSENBdnA5Vkk2X290Mmg2TUt4MjJuMFZrR0FjSW05T2tXTFprektiT3pFNWNIcWRlQmR0Rkh6a2NHbEY1aVRZZXVaN1JxNGgzWWNkU2JJUlhSUHRCd3JsU0R5NnNGZw?oc=5",
-      "source": "Catalogo media perugia · gruppo 1",
-      "publishedAt": "2026-05-07T07:00:00.000Z",
-      "image": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300",
-      "summary": "&lt;a href=\"https://news.google.com/rss/articles/CBMi4gFBVV95cUxQX21uSFJFOHJLbWM5ekZQUDFEZVJya2lYVXl2ZkRPMmhTZ3BNaDBwcEhONlRiNG1OSklGM09UV09lVFlUcXpSemlBQnphcjJEbnFiWnNOR0FfV1E1UDBUTU1fbWduWnVxWXJRUmVpVzh6V0Y0dWtMNExVbWpXSTI2eVhFdGxDYlZkWGFTYy1hVHdLeng2dXNGQ041NEQ4OUVWMDJNOUVWLWNROURJZzAtVUxVQ0Y4TG5veGVTWEMwcnpzOE1jYVZaRUp3Rk5sSDl4MVZ1RXRZRktYOU16R1lRYjV30gH"
     }
   ]
 }

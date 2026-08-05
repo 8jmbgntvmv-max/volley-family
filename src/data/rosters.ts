@@ -34,8 +34,11 @@ export const rosters: Roster[] = [
     ],
   },
   {
-    team: 'matese', status: 'updating', sourceUrl: 'https://www.facebook.com/polisportiva.matese', sourceLabel: 'Canale ufficiale Matese',
-    players: [{ name: 'Chiara Lupoli', followed: true }],
+    team: 'matese', status: 'updating', sourceUrl: 'https://www.instagram.com/polisportivamatese/', sourceLabel: 'Canale ufficiale Matese',
+    players: [
+      { name: 'Chiara Lupoli', followed: true },
+      { name: 'Carola Nasi', role: 'Libero', birthYear: '2001', nationality: 'Italia', profileUrl: 'https://www.instagram.com/p/DbnyDyBCF1d/', profileSource: 'Conferma ufficiale Matese' },
+    ],
   },
   {
     team: 'perugia', status: 'complete', sourceUrl: 'https://www.sirsafetyperugia.it/players', sourceLabel: 'Roster ufficiale Perugia',

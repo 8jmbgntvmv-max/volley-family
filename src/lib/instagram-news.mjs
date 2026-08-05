@@ -19,3 +19,20 @@ export function instagramVolleyItems(json, { team, source }) {
     }]
   })
 }
+
+export function instagramOembedItem(json, { team, source, url, publishedAt }) {
+  const payload = typeof json === 'string' ? JSON.parse(json) : json
+  const caption = String(payload.title ?? '').replace(/\s+/g, ' ').trim()
+  if (!caption || !volleyTerms.test(caption) || !payload.media_id) return null
+  const title = caption.split(/(?<=[.!?])\s/)[0].replace(/^🏐\s*/, '').slice(0, 180)
+  return {
+    id: `${team}-instagram-${String(payload.media_id).split('_')[0]}`,
+    team,
+    title: title || 'Nuova pubblicazione della società',
+    url,
+    source,
+    publishedAt,
+    image: payload.thumbnail_url,
+    summary: caption.slice(0, 500),
+  }
+}

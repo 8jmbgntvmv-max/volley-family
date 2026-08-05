@@ -4,7 +4,7 @@ import { mergeNewsItems } from '../src/lib/news-items.mjs'
 import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
-import { instagramVolleyItems } from '../src/lib/instagram-news.mjs'
+import { instagramOembedItem } from '../src/lib/instagram-news.mjs'
 
 const outputUrl = new URL('../public/news.json', import.meta.url)
 const localFallback = JSON.parse(await readFile(outputUrl, 'utf8'))
@@ -182,12 +182,17 @@ const catalogSearches = Object.keys(catalogTopics).flatMap((team) => searchableS
   return { id: `catalog-${team}-${index + 1}`, team, label: `Catalogo media ${team} · gruppo ${index + 1}`, query, filter: catalogFilters[team] }
 }))
 
-const mateseInstagramUrl = 'https://www.instagram.com/api/v1/feed/user/3063055134/?count=12'
-const mateseInstagramNews = () => get(mateseInstagramUrl, {
-  'user-agent': 'Instagram 219.0.0.12.117 Android',
-  'x-ig-app-id': '936619743392459',
-  accept: 'application/json',
-}).then((json) => instagramVolleyItems(json, { team: 'matese', source: 'Instagram ufficiale Matese' }))
+const mateseOfficialPosts = [
+  { url: 'https://www.instagram.com/p/DbnyDyBCF1d/', publishedAt: '2026-08-04T14:30:08.859Z' },
+]
+const mateseInstagramNews = async () => {
+  const items = await Promise.all(mateseOfficialPosts.map(async (post) => {
+    const endpoint = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(post.url)}`
+    const json = await get(endpoint, { accept: 'application/json' })
+    return instagramOembedItem(json, { team: 'matese', source: 'Instagram ufficiale Matese', ...post })
+  }))
+  return items.filter(Boolean)
+}
 
 const sourceTasks = [
   { id: 'matese-curated', team: 'matese', label: 'Archivio Matese verificato', url: 'https://www.puntosportstadio.it/', run: () => Promise.resolve(curatedMatese) },
