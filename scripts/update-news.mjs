@@ -137,21 +137,51 @@ const athleteSearches = [
   { id: 'luca-loreti', name: 'Luca Loreti', team: 'perugia' },
 ]
 
-const googleNewsFeed = (name) => `https://news.google.com/rss/search?q=${encodeURIComponent(`"${name}" pallavolo`)}&hl=it&gl=IT&ceid=IT:it`
+const googleNewsFeed = (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=it&gl=IT&ceid=IT:it`
+const mateseFilter = (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)
 
-const results = await Promise.allSettled([
-  Promise.resolve(curatedMatese),
-  Promise.resolve(curatedAthletes),
-  get('https://www.altinovolley.it/wp-json/wp/v2/posts?per_page=20&_fields=date_gmt,link,title,excerpt').then(altinoItems),
-  get('https://www.sirsafetyperugia.it/new/').then(perugiaItems),
-  get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
-  get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
-  get('https://www.puntosportstadio.it/?feed=rss2').then((xml) => rssItems(xml, 'matese', 'Punto Sport Stadio', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
-  get('https://www.volleycloud.it/feed/').then((xml) => rssItems(xml, 'matese', 'VolleyCloud', (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)).slice(0, 4)),
-  ...athleteSearches.map((athlete) => get(googleNewsFeed(athlete.name)).then((xml) => rssItems(xml, athlete.team, 'Ricerca notizie').slice(0, 5).map((item) => ({ ...item, athleteIds: [athlete.id] })))),
-])
+const teamSearches = [
+  { id: 'altino-media', team: 'altino', label: 'Media: Altino Volley', query: '"Altino Volley" pallavolo', filter: (text) => /altino/i.test(text) && /volley|pallavol/i.test(text) },
+  { id: 'matese-media', team: 'matese', label: 'Media: Matese Volley', query: '"Polisportiva Matese" pallavolo OR volley', filter: mateseFilter },
+  { id: 'perugia-media', team: 'perugia', label: 'Media: Sir Perugia', query: '"Sir Susa Scai Perugia" volley OR pallavolo', filter: (text) => /perugia/i.test(text) && /volley|pallavol/i.test(text) },
+]
 
+const sourceTasks = [
+  { id: 'matese-curated', team: 'matese', label: 'Archivio Matese verificato', url: 'https://www.puntosportstadio.it/', run: () => Promise.resolve(curatedMatese) },
+  { id: 'athletes-curated', team: null, label: 'Profili atleti verificati', url: '', run: () => Promise.resolve(curatedAthletes) },
+  { id: 'altino-official', team: 'altino', label: 'Sito ufficiale Altino', url: 'https://www.altinovolley.it/', run: () => get('https://www.altinovolley.it/wp-json/wp/v2/posts?per_page=30&_fields=date_gmt,link,title,excerpt').then(altinoItems) },
+  { id: 'perugia-official', team: 'perugia', label: 'Sito ufficiale Perugia', url: 'https://www.sirsafetyperugia.it/new/', run: () => get('https://www.sirsafetyperugia.it/new/').then(perugiaItems) },
+  { id: 'matese-guiscards', team: 'matese', label: 'Salerno Guiscards', url: 'https://www.guiscards.it/', run: () => get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', mateseFilter).slice(0, 6)) },
+  { id: 'matese-sportcasertano', team: 'matese', label: 'SportCasertano', url: 'https://www.sportcasertano.it/', run: () => get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', mateseFilter).slice(0, 6)) },
+  { id: 'matese-puntosport', team: 'matese', label: 'Punto Sport Stadio', url: 'https://www.puntosportstadio.it/', run: () => get('https://www.puntosportstadio.it/?feed=rss2').then((xml) => rssItems(xml, 'matese', 'Punto Sport Stadio', mateseFilter).slice(0, 6)) },
+  { id: 'matese-volleycloud', team: 'matese', label: 'VolleyCloud', url: 'https://www.volleycloud.it/', run: () => get('https://www.volleycloud.it/feed/').then((xml) => rssItems(xml, 'matese', 'VolleyCloud', mateseFilter).slice(0, 6)) },
+  ...teamSearches.map((source) => ({ ...source, url: googleNewsFeed(source.query), run: () => get(googleNewsFeed(source.query)).then((xml) => rssItems(xml, source.team, source.label, source.filter).slice(0, 8)) })),
+  ...athleteSearches.map((athlete) => ({ id: `athlete-${athlete.id}`, team: athlete.team, label: `Atleta: ${athlete.name}`, url: googleNewsFeed(`"${athlete.name}" pallavolo`), run: () => get(googleNewsFeed(`"${athlete.name}" pallavolo`)).then((xml) => rssItems(xml, athlete.team, 'Ricerca notizie').slice(0, 6).map((item) => ({ ...item, athleteIds: [athlete.id] }))) })),
+]
+
+const checkedAt = new Date().toISOString()
+const results = await Promise.allSettled(sourceTasks.map((source) => source.run()))
 const fresh = results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
+const sources = sourceTasks.map((source, index) => {
+  const result = results[index]
+  return {
+    id: source.id,
+    team: source.team,
+    label: source.label,
+    url: source.url,
+    mode: 'automatic',
+    status: result.status === 'fulfilled' ? 'ok' : 'error',
+    checkedAt,
+    itemsFound: result.status === 'fulfilled' ? result.value.length : 0,
+  }
+}).concat([
+  { id: 'altino-facebook', team: 'altino', label: 'Facebook Altino', url: 'https://www.facebook.com/altinovolley/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
+  { id: 'altino-instagram', team: 'altino', label: 'Instagram Altino', url: 'https://www.instagram.com/altinovolley.official/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
+  { id: 'matese-facebook', team: 'matese', label: 'Facebook Matese', url: 'https://www.facebook.com/polisportiva.matese', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
+  { id: 'matese-instagram', team: 'matese', label: 'Instagram Matese', url: 'https://www.instagram.com/polisportivamatese/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
+  { id: 'perugia-facebook', team: 'perugia', label: 'Facebook Perugia', url: 'https://www.facebook.com/SirSafetyPerugiaVolley/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
+  { id: 'perugia-instagram', team: 'perugia', label: 'Instagram Perugia', url: 'https://www.instagram.com/sirsafetyperugia/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
+])
 const previous = Array.isArray(fallback.items) ? fallback.items : []
 const deduplicated = mergeNewsItems(fresh, previous)
 const items = await Promise.all(deduplicated.map(async (item) => {
@@ -161,5 +191,7 @@ const items = await Promise.all(deduplicated.map(async (item) => {
   return { ...item, image: item.image || details.image, summary, matchFocus }
 }))
 
-await writeFile(outputUrl, `${JSON.stringify({ updatedAt: new Date().toISOString(), items }, null, 2)}\n`)
-console.log(`News aggiornate: ${items.length}`)
+await writeFile(outputUrl, `${JSON.stringify({ updatedAt: checkedAt, sources, items }, null, 2)}\n`)
+const okSources = sources.filter((source) => source.status === 'ok').length
+const failedSources = sources.filter((source) => source.status === 'error').length
+console.log(`News aggiornate: ${items.length}; fonti automatiche riuscite: ${okSources}; errori: ${failedSources}`)

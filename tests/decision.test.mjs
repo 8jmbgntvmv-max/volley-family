@@ -13,6 +13,7 @@ import { buildUpdateItems, unreadUpdateItems } from '../src/lib/update-center.mj
 import { isFamilyBoardConfigured, validateFamilyBoardPost } from '../src/lib/family-board.mjs'
 import { athleteMediaLinks } from '../src/lib/athlete-media.mjs'
 import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
+import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from '../src/lib/weekend-volley.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -63,6 +64,32 @@ test('mantiene una sezione dedicata ai tre atleti e la ricerca periodica', async
     assert.match(updater, new RegExp(name))
   }
   assert.match(updater, /news\.google\.com\/rss\/search/)
+})
+test('Weekend Volley seleziona le prossime tre gare e solo informazioni pubblicate', () => {
+  const schedule = [
+    { id: 'a-old', team: 'altino', date: '2026-08-01', opponent: 'Vecchia' },
+    { id: 'a-next', team: 'altino', date: '2026-10-04', opponent: 'Monviso Volley' },
+    { id: 'm-next', team: 'matese', date: '2026-10-17', opponent: 'Poolstars' },
+    { id: 'p-next', team: 'perugia', date: '2026-10-18', opponent: 'Cuneo Volley' },
+  ]
+  assert.deepEqual(nextMatchesByTeam(schedule, ['altino', 'matese', 'perugia'], '2026-08-05').map((match) => match.id), ['a-next', 'm-next', 'p-next'])
+  const news = [
+    { id: 'specifica', team: 'altino', title: 'Verso Monviso Volley, il coach presenta la gara', summary: 'Possibile sestetto in campo con la rosa al completo', publishedAt: '2026-09-30T10:00:00Z' },
+    { id: 'generica', team: 'altino', title: 'Nuova maglia', publishedAt: '2026-09-29T10:00:00Z' },
+  ]
+  assert.deepEqual(relatedNewsForMatch(schedule[1], news).map((item) => item.id), ['specifica'])
+  assert.deepEqual(lineupNewsForMatch(schedule[1], news).map((item) => item.id), ['specifica'])
+})
+test('News mostra comando, esito fonti e ricerca periodica ravvicinata', async () => {
+  const [app, updater, workflow] = await Promise.all([
+    readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../scripts/update-news.mjs', import.meta.url), 'utf8'),
+    readFile(new URL('../.github/workflows/deploy.yml', import.meta.url), 'utf8'),
+  ])
+  for (const label of ['AGGIORNAMENTO', 'Ultimo controllo:', 'Vedi fonti controllate', 'Weekend Volley', 'Possibile formazione']) assert.match(app, new RegExp(label))
+  assert.match(updater, /sources/)
+  assert.match(updater, /Media: Matese Volley/)
+  assert.match(workflow, /7,22,37,52/)
 })
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')

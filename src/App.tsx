@@ -9,12 +9,14 @@ import { buildUpdateItems, unreadUpdateItems, type UpdateItem, type UpdateKind }
 import { createFamilyBoardClient, validateFamilyBoardPost, type FamilyBoardKind, type FamilyBoardMessage } from './lib/family-board.mjs'
 import { athleteMediaLinks } from './lib/athlete-media.mjs'
 import { youtubeLiveUrl } from './lib/live-streams.mjs'
+import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from './lib/weekend-volley.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
 type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'board' | 'rules' | 'updates'
 type AthleteId = 'chiara-lupoli' | 'camilla-lupoli' | 'luca-loreti'
 type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[]; summary?: string; matchFocus?: MatchFocus }
+type NewsSourceState = { id: string; team: TeamId | null; label: string; url: string; mode: 'automatic' | 'direct'; status: 'ok' | 'error' | 'link-only'; checkedAt: string; itemsFound: number }
 type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[]; sourceUpdatedAt?: string }
 type ResultsByMatch = Record<string, MatchResult>
 type PlayerStats = { name: string; profileUrl?: string; appearances?: number | null; points?: number | null; attacks?: number | null; attackPoints?: number | null; attackPercentage?: number | null; serves?: number | null; aces?: number | null; blocks?: number | null; serveErrors?: number | null; perfectReceptions?: number | null }
@@ -24,7 +26,7 @@ type SelectedAthlete = { team: TeamId; player: RosterPlayer }
 type UpdatePreferences = { news: boolean; results: boolean; matches: boolean; athletes: boolean; teams: Record<TeamId, boolean> }
 const defaultUpdatePreferences: UpdatePreferences = { news: true, results: true, matches: true, athletes: true, teams: { altino: true, matese: true, perugia: true } }
 const nav: { id: Screen; label: string; icon: string }[] = [
-  { id: 'home', label: 'Home', icon: '⌂' }, { id: 'agenda', label: 'Confronto', icon: '▦' },
+  { id: 'home', label: 'Home', icon: '⌂' }, { id: 'agenda', label: 'Weekend', icon: '▦' },
   { id: 'teams', label: 'Squadre', icon: '●' }, { id: 'news', label: 'News', icon: '◉' },
   { id: 'board', label: 'Bacheca', icon: '✎' },
 ]
@@ -40,6 +42,7 @@ const athletes: { id: AthleteId; name: string; team: TeamId }[] = [
 ]
 const longDate = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })
 const boardDate = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+const scanDate = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 const dateLabel = (value: string) => longDate.format(new Date(`${value}T12:00:00`))
 const scoreLabel = (result: MatchResult) => `${result.firstTeamSets}–${result.secondTeamSets}`
 const setsLabel = (result: MatchResult) => result.sets.map((set) => `${set.first}-${set.second}`).join(', ')
@@ -128,6 +131,33 @@ function HomeMatchFocus({ news, onOpenNews }: { news: NewsItem[]; onOpenNews: ()
       return <article className={`focus-card ${group.id}`} key={group.id}><div className="focus-card-title"><span>{group.id === 'pre' ? 'PRIMA' : group.id === 'post' ? 'DOPO' : 'ROSA'}</span><strong>{group.title}</strong></div>{items.length ? <div className="focus-links">{items.map((item) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id}><small>{item.source === 'Sito ufficiale' ? 'Fonte ufficiale' : 'Fonte giornalistica'} · {dateLabel(item.publishedAt.slice(0, 10))}</small><strong>{item.title}</strong>{item.summary && <span>{item.summary}</span>}</a>)}</div> : <p>{group.empty}<br /><b>Monitoraggio automatico attivo.</b></p>}</article>
     })}</div>
   </section>
+}
+
+function NewsRefreshPanel({ updatedAt, sourceStates, refreshing, message, onRefresh }: {
+  updatedAt: string | null
+  sourceStates: NewsSourceState[]
+  refreshing: boolean
+  message: string
+  onRefresh: () => void
+}) {
+  const automatic = sourceStates.filter((source) => source.mode === 'automatic')
+  const succeeded = automatic.filter((source) => source.status === 'ok').length
+  const failed = automatic.filter((source) => source.status === 'error').length
+  return <section className="news-refresh-panel" aria-live="polite"><div className="news-refresh-heading"><div><p className="eyebrow">Ricerca delle fonti</p><strong>{updatedAt ? `Ultimo controllo: ${scanDate.format(new Date(updatedAt))}` : 'Controllo non ancora disponibile'}</strong><small>{automatic.length ? `${succeeded}/${automatic.length} fonti automatiche raggiunte${failed ? ` · ${failed} non disponibili` : ''}` : 'Elenco fonti in caricamento'}</small></div><button onClick={onRefresh} disabled={refreshing}>{refreshing ? 'RICERCA…' : 'AGGIORNAMENTO'}</button></div>{message && <p className="news-refresh-message">{message}</p>}<details><summary>Vedi fonti controllate <b>＋</b></summary><div className="news-source-statuses">{sourceStates.map((source) => <a href={source.url || undefined} target={source.url ? '_blank' : undefined} rel={source.url ? 'noreferrer' : undefined} className={source.status} key={source.id}><span>{source.status === 'ok' ? '✓' : source.status === 'error' ? '!' : '↗'}</span><div><strong>{source.label}</strong><small>{source.status === 'ok' ? `${source.itemsFound} elementi trovati` : source.status === 'error' ? 'Fonte non raggiunta nell’ultimo controllo' : 'Canale social: apertura diretta'}</small></div></a>)}</div></details><p className="news-refresh-note">La ricerca completa viene eseguita online periodicamente. Il comando acquisisce subito l’ultimo controllo pubblicato; i social che impediscono la lettura automatica restano disponibili come collegamenti diretti.</p></section>
+}
+
+function WeekendVolley({ news, sourceStates, updatedAt, onOpenNews }: { news: NewsItem[]; sourceStates: NewsSourceState[]; updatedAt: string | null; onOpenNews: (team: TeamId) => void }) {
+  const upcoming = useMemo(() => nextMatchesByTeam(matches, teams.map((team) => team.id)), [])
+  return <section className="weekend-volley" aria-labelledby="weekend-volley-title"><div className="weekend-volley-heading"><div><p className="eyebrow">Dossier delle prossime gare</p><h2 id="weekend-volley-title">Weekend Volley</h2></div>{updatedAt && <span>Aggiornato {scanDate.format(new Date(updatedAt))}</span>}</div><p className="page-intro">Tre partite sotto osservazione. L’app riporta soltanto informazioni reperite nelle fonti pubbliche e segnala chiaramente ciò che non è ancora stato pubblicato.</p><div className="weekend-dossier-grid">{upcoming.map((match, index) => {
+    const team = teams[index]
+    if (!match) return <article className="weekend-dossier" key={team.id}><strong>{team.shortName}</strong><p>Prossima partita non disponibile.</p></article>
+    const related = relatedNewsForMatch(match, news, 4)
+    const lineup = lineupNewsForMatch(match, news)
+    const availability = related.filter((item) => item.focus === 'availability')
+    const automaticSources = sourceStates.filter((source) => source.team === team.id && source.mode === 'automatic')
+    const mapsUrl = googleMapsDirectionsUrl(match.venue)
+    return <article className="weekend-dossier" key={match.id}><header><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><small>{dateLabel(match.date)} · {match.time ?? 'orario da definire'}</small><strong>{match.home ? `${team.shortName} – ${match.opponent}` : `${match.opponent} – ${team.shortName}`}</strong><em>{match.home ? 'In casa' : 'In trasferta'} · {match.competition}</em></div></header><div className="weekend-actions">{mapsUrl && <a href={mapsUrl} target="_blank" rel="noreferrer">Indicazioni</a>}<button onClick={() => onOpenNews(team.id)}>Tutte le news</button></div><section><h3>Aggiornamenti sulla gara</h3>{related.length ? <div className="weekend-news-links">{related.map((item) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id}><small>{item.source} · {dateLabel(item.publishedAt.slice(0, 10))}</small><strong>{item.title}</strong>{item.summary && <span>{item.summary}</span>}</a>)}</div> : <p>Nessun articolo specifico sulla gara è stato ancora pubblicato.</p>}</section><section><h3>Possibile formazione</h3>{lineup.length ? lineup.map((item) => <a className="weekend-evidence" href={item.url} target="_blank" rel="noreferrer" key={item.id}>{item.title}</a>) : <p>Formazione non ancora indicata dalle fonti. L’app non genera un sestetto senza elementi pubblicati.</p>}</section><section><h3>Assenze e disponibilità</h3>{availability.length ? availability.map((item) => <a className="weekend-evidence" href={item.url} target="_blank" rel="noreferrer" key={item.id}>{item.title}</a>) : <p>Nessuna indisponibilità pubblica trovata.</p>}</section><footer>{automaticSources.filter((source) => source.status === 'ok').length}/{automaticSources.length || 0} fonti automatiche raggiunte</footer></article>
+  })}</div></section>
 }
 
 function HomeRosters({ onSelectAthlete }: { onSelectAthlete: (athlete: SelectedAthlete) => void }) {
@@ -357,6 +387,10 @@ function App() {
   const [teamFilter, setTeamFilter] = useState<TeamId | 'all'>('all')
   const [newsFilter, setNewsFilter] = useState<TeamId | 'all'>('all')
   const [news, setNews] = useState<NewsItem[]>([])
+  const [newsUpdatedAt, setNewsUpdatedAt] = useState<string | null>(null)
+  const [newsSourceStates, setNewsSourceStates] = useState<NewsSourceState[]>([])
+  const [newsRefreshing, setNewsRefreshing] = useState(false)
+  const [newsRefreshMessage, setNewsRefreshMessage] = useState('')
   const [results, setResults] = useState<ResultsByMatch>({})
   const [leagueData, setLeagueData] = useState<LeagueData | null>(null)
   const [selectedAthlete, setSelectedAthlete] = useState<SelectedAthlete | null>(null)
@@ -375,6 +409,30 @@ function App() {
   const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
   const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
   const unreadUpdates = useMemo(() => visibleUpdates.filter((item) => !seenIds.has(item.id)), [visibleUpdates, seenIds])
+
+  const loadData = useCallback(async (manual = false) => {
+    if (manual) { setNewsRefreshing(true); setNewsRefreshMessage('Controllo degli aggiornamenti pubblicati…') }
+    const version = Date.now()
+    const options: RequestInit = { cache: 'no-store' }
+    const json = (path: string) => fetch(`${import.meta.env.BASE_URL}${path}?v=${version}`, options).then((response) => {
+      if (!response.ok) throw new Error(`${path}: ${response.status}`)
+      return response.json()
+    })
+    const [newsResponse, resultsResponse, leagueResponse] = await Promise.allSettled([
+      json('news.json'), json('results.json'), json('league-data.json'),
+    ])
+    if (newsResponse.status === 'fulfilled') {
+      const payload = newsResponse.value
+      setNews(payload.items ?? [])
+      setNewsUpdatedAt(payload.updatedAt ?? null)
+      setNewsSourceStates(payload.sources ?? [])
+      if (manual) setNewsRefreshMessage(`Aggiornamento acquisito: ${payload.items?.length ?? 0} news disponibili${payload.updatedAt ? ` · ricerca online del ${scanDate.format(new Date(payload.updatedAt))}` : ''}.`)
+    } else if (manual) setNewsRefreshMessage('Non è stato possibile raggiungere il servizio News. Riprova tra poco.')
+    if (resultsResponse.status === 'fulfilled') setResults(Object.fromEntries((resultsResponse.value.items ?? []).map((item: MatchResult) => [item.matchNumber, item])))
+    if (leagueResponse.status === 'fulfilled') setLeagueData(leagueResponse.value)
+    setDataReady(true)
+    if (manual) setNewsRefreshing(false)
+  }, [])
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -397,24 +455,12 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const loadData = async () => {
-      const options: RequestInit = { cache: 'no-store' }
-      const [newsResponse, resultsResponse, leagueResponse] = await Promise.allSettled([
-        fetch(`${import.meta.env.BASE_URL}news.json`, options).then((response) => response.json()),
-        fetch(`${import.meta.env.BASE_URL}results.json`, options).then((response) => response.json()),
-        fetch(`${import.meta.env.BASE_URL}league-data.json`, options).then((response) => response.json()),
-      ])
-      if (newsResponse.status === 'fulfilled') setNews(newsResponse.value.items ?? [])
-      if (resultsResponse.status === 'fulfilled') setResults(Object.fromEntries((resultsResponse.value.items ?? []).map((item: MatchResult) => [item.matchNumber, item])))
-      if (leagueResponse.status === 'fulfilled') setLeagueData(leagueResponse.value)
-      setDataReady(true)
-    }
     void loadData()
-    const timer = window.setInterval(loadData, 5 * 60 * 1000)
+    const timer = window.setInterval(() => { void loadData() }, 5 * 60 * 1000)
     const refreshVisible = () => { if (document.visibilityState === 'visible') void loadData() }
     document.addEventListener('visibilitychange', refreshVisible)
     return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', refreshVisible) }
-  }, [])
+  }, [loadData])
 
   useEffect(() => {
     if (!dataReady || updatesInitialized || !updates.length) return
@@ -467,7 +513,7 @@ function App() {
     <header className="topbar"><div><p className="eyebrow">Stagione 2026/27</p><h1>Volley Family</h1></div><div className="topbar-actions"><button className="updates-button" onClick={() => setScreen('updates')} aria-label={unreadUpdates.length === 1 ? 'Novità: 1 nuovo aggiornamento' : unreadUpdates.length ? `Novità: ${unreadUpdates.length} nuovi aggiornamenti` : 'Apri Novità'}><span>Novità</span>{unreadUpdates.length > 0 && <b>{unreadUpdates.length > 99 ? '99+' : unreadUpdates.length}</b>}</button><div className="app-mark">VF</div></div></header>
     <main className="content">
       {screen === 'home' && <>
-        <section className="hero-card"><p className="eyebrow light">Agenda condivisa</p><h2>Tutte le partite, senza suggerimenti</h2><p>Consulta liberamente gare in casa e trasferte di Altino, Matese e Perugia.</p><button onClick={() => setScreen('agenda')}>Apri i calendari</button></section>
+        <section className="hero-card"><p className="eyebrow light">Weekend Volley</p><h2>Studiamo le prossime tre partite</h2><p>Aggiornamenti, possibili formazioni e indisponibilità dalle fonti pubbliche.</p><button onClick={() => setScreen('agenda')}>Apri Weekend Volley</button></section>
         <HomeUpdatesBanner count={unreadUpdates.length} onOpen={() => setScreen('updates')} />
         <HomeFamilyBoard onOpen={() => setScreen('board')} />
         <HomeLiveStreams />
@@ -480,9 +526,9 @@ function App() {
         </section>
         <section className="rule-summary"><span className="check">▦</span><div><p className="eyebrow">Calendario neutrale</p><h2>Decidi tu quale partita seguire</h2><p>L’app non assegna priorità e non indica una partita preferita.</p></div></section>
       </>}
-      {screen === 'agenda' && <section className="page"><p className="eyebrow">Agenda settimanale</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza graduatorie o suggerimenti. I risultati ufficiali FIPAV di Matese vengono aggiornati automaticamente.</p><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
+      {screen === 'agenda' && <section className="page"><WeekendVolley news={news} sourceStates={newsSourceStates} updatedAt={newsUpdatedAt} onOpenNews={(team) => { setNewsFilter(team); setScreen('news') }} /><div className="calendar-divider"><p className="eyebrow">Agenda completa</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza suggerimenti né graduatorie. I risultati ufficiali FIPAV di Matese vengono aggiornati automaticamente.</p></div><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
       {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div>{team.id === 'matese' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali FIPAV nazionale, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{matches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={match.matchNumber ? results[match.matchNumber] : undefined} /></div>)}</section>)}</section>}
-      {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
+      {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><NewsRefreshPanel updatedAt={newsUpdatedAt} sourceStates={newsSourceStates.filter((source) => newsFilter === 'all' || source.team === newsFilter || source.team === null)} refreshing={newsRefreshing} message={newsRefreshMessage} onRefresh={() => { void loadData(true) }} /><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
       {screen === 'updates' && <UpdatesCenter updates={visibleUpdates} seenIds={seenIds} preferences={preferences} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onOpenResults={() => setScreen('agenda')} />}
       {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} />}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}
