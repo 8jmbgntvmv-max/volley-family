@@ -3,6 +3,7 @@ import { articleImageFromHtml } from '../src/lib/news-image.mjs'
 import { mergeNewsItems } from '../src/lib/news-items.mjs'
 import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
+import { searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
 
 const outputUrl = new URL('../public/news.json', import.meta.url)
 const localFallback = JSON.parse(await readFile(outputUrl, 'utf8'))
@@ -21,7 +22,7 @@ const decode = (value = '') => value
 async function get(url) {
   const requestUrl = new URL(url)
   requestUrl.searchParams.set('_vf', Date.now().toString())
-  const response = await fetch(requestUrl, { cache: 'no-store', headers: { 'cache-control': 'no-cache', pragma: 'no-cache', 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)' } })
+  const response = await fetch(requestUrl, { cache: 'no-store', signal: AbortSignal.timeout(12_000), headers: { 'cache-control': 'no-cache', pragma: 'no-cache', 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)' } })
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`)
   return response.text()
 }
@@ -146,6 +147,21 @@ const teamSearches = [
   { id: 'perugia-media', team: 'perugia', label: 'Media: Sir Perugia', query: '"Sir Susa Scai Perugia" volley OR pallavolo', filter: (text) => /perugia/i.test(text) && /volley|pallavol/i.test(text) },
 ]
 
+const catalogTopics = {
+  altino: '"Altino Volley" pallavolo',
+  matese: '"Polisportiva Matese" pallavolo',
+  perugia: '"Sir Perugia" volley',
+}
+const catalogFilters = {
+  altino: (text) => /altino/i.test(text) && /volley|pallavol/i.test(text),
+  matese: mateseFilter,
+  perugia: (text) => /sir|perugia/i.test(text) && /volley|pallavol/i.test(text),
+}
+const catalogSearches = Object.keys(catalogTopics).flatMap((team) => searchableSourceGroups(team).map((domains, index) => {
+  const query = `${catalogTopics[team]} (${domains.map((value) => `site:${value}`).join(' OR ')})`
+  return { id: `catalog-${team}-${index + 1}`, team, label: `Catalogo media ${team} · gruppo ${index + 1}`, query, filter: catalogFilters[team] }
+}))
+
 const sourceTasks = [
   { id: 'matese-curated', team: 'matese', label: 'Archivio Matese verificato', url: 'https://www.puntosportstadio.it/', run: () => Promise.resolve(curatedMatese) },
   { id: 'athletes-curated', team: null, label: 'Profili atleti verificati', url: '', run: () => Promise.resolve(curatedAthletes) },
@@ -156,6 +172,7 @@ const sourceTasks = [
   { id: 'matese-puntosport', team: 'matese', label: 'Punto Sport Stadio', url: 'https://www.puntosportstadio.it/', run: () => get('https://www.puntosportstadio.it/?feed=rss2').then((xml) => rssItems(xml, 'matese', 'Punto Sport Stadio', mateseFilter).slice(0, 6)) },
   { id: 'matese-volleycloud', team: 'matese', label: 'VolleyCloud', url: 'https://www.volleycloud.it/', run: () => get('https://www.volleycloud.it/feed/').then((xml) => rssItems(xml, 'matese', 'VolleyCloud', mateseFilter).slice(0, 6)) },
   ...teamSearches.map((source) => ({ ...source, url: googleNewsFeed(source.query), run: () => get(googleNewsFeed(source.query)).then((xml) => rssItems(xml, source.team, source.label, source.filter).slice(0, 8)) })),
+  ...catalogSearches.map((source) => ({ ...source, url: googleNewsFeed(source.query), run: () => get(googleNewsFeed(source.query)).then((xml) => rssItems(xml, source.team, source.label, source.filter).slice(0, 8)) })),
   ...athleteSearches.map((athlete) => ({ id: `athlete-${athlete.id}`, team: athlete.team, label: `Atleta: ${athlete.name}`, url: googleNewsFeed(`"${athlete.name}" pallavolo`), run: () => get(googleNewsFeed(`"${athlete.name}" pallavolo`)).then((xml) => rssItems(xml, athlete.team, 'Ricerca notizie').slice(0, 6).map((item) => ({ ...item, athleteIds: [athlete.id] }))) })),
 ]
 

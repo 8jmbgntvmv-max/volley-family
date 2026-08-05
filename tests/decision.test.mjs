@@ -14,6 +14,7 @@ import { isFamilyBoardConfigured, validateFamilyBoardPost } from '../src/lib/fam
 import { athleteMediaLinks } from '../src/lib/athlete-media.mjs'
 import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
 import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from '../src/lib/weekend-volley.mjs'
+import { newsSourceCatalog, searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -90,6 +91,14 @@ test('News mostra comando, esito fonti e ricerca periodica ravvicinata', async (
   assert.match(updater, /sources/)
   assert.match(updater, /Media: Matese Volley/)
   assert.match(workflow, /7,22,37,52/)
+})
+test('il catalogo media alimenta ricerche mirate per le tre squadre', async () => {
+  const updater = await readFile(new URL('../scripts/update-news.mjs', import.meta.url), 'utf8')
+  for (const label of ['Volley News', 'Volleyball.it', 'iVolley Magazine', 'Dallari Volley', 'Pianeta Volley', 'VolleyUmbria.it', 'CSI Campania', 'Rete8', 'VASPORT']) {
+    assert.ok(newsSourceCatalog.some((source) => source.label.includes(label)), `${label} manca dal catalogo`)
+  }
+  for (const team of ['altino', 'matese', 'perugia']) assert.ok(searchableSourceGroups(team).flat().length >= 10)
+  assert.match(updater, /catalogSearches/)
 })
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')
