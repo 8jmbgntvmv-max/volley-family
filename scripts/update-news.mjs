@@ -150,6 +150,16 @@ async function perugiaOfficialNews() {
   }
 }
 
+async function altinoOfficialNews() {
+  try {
+    const url = 'https://www.altinovolley.it/wp-json/wp/v2/posts?per_page=30&_fields=date_gmt,link,title,excerpt'
+    return altinoItems(await get(url))
+  } catch {
+    const query = googleNewsFeed('site:altinovolley.it "Altino Volley"')
+    return rssItems(await get(query), 'altino', 'Sito ufficiale', (text) => /altino/i.test(text)).slice(0, 8)
+  }
+}
+
 const teamSearches = [
   { id: 'altino-media', team: 'altino', label: 'Media: Altino Volley', query: '"Altino Volley" pallavolo', filter: (text) => /altino/i.test(text) && /volley|pallavol/i.test(text) },
   { id: 'matese-media', team: 'matese', label: 'Media: Matese Volley', query: '"Polisportiva Matese" pallavolo OR volley', filter: mateseFilter },
@@ -174,7 +184,7 @@ const catalogSearches = Object.keys(catalogTopics).flatMap((team) => searchableS
 const sourceTasks = [
   { id: 'matese-curated', team: 'matese', label: 'Archivio Matese verificato', url: 'https://www.puntosportstadio.it/', run: () => Promise.resolve(curatedMatese) },
   { id: 'athletes-curated', team: null, label: 'Profili atleti verificati', url: '', run: () => Promise.resolve(curatedAthletes) },
-  { id: 'altino-official', team: 'altino', label: 'Sito ufficiale Altino', url: 'https://www.altinovolley.it/', run: () => get('https://www.altinovolley.it/wp-json/wp/v2/posts?per_page=30&_fields=date_gmt,link,title,excerpt').then(altinoItems) },
+  { id: 'altino-official', team: 'altino', label: 'Sito ufficiale Altino', url: 'https://www.altinovolley.it/', run: altinoOfficialNews },
   { id: 'perugia-official', team: 'perugia', label: 'Sito ufficiale Perugia', url: 'https://www.sirsafetyperugia.it/new/', run: perugiaOfficialNews },
   { id: 'matese-guiscards', team: 'matese', label: 'Salerno Guiscards', url: 'https://www.guiscards.it/', run: () => get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', mateseFilter).slice(0, 6)) },
   { id: 'matese-sportcasertano', team: 'matese', label: 'SportCasertano', url: 'https://www.sportcasertano.it/', run: () => get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', mateseFilter).slice(0, 6)) },

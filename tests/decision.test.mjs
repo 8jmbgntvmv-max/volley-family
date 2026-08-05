@@ -100,6 +100,7 @@ test('il catalogo media alimenta ricerche mirate per le tre squadre', async () =
   for (const team of ['altino', 'matese', 'perugia']) assert.ok(searchableSourceGroups(team).flat().length >= 10)
   assert.match(updater, /catalogSearches/)
   assert.match(updater, /perugiaOfficialNews/)
+  assert.match(updater, /altinoOfficialNews/)
 })
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')
