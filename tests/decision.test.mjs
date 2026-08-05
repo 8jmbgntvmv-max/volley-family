@@ -15,6 +15,7 @@ import { athleteMediaLinks } from '../src/lib/athlete-media.mjs'
 import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
 import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from '../src/lib/weekend-volley.mjs'
 import { newsSourceCatalog, searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
+import { instagramVolleyItems } from '../src/lib/instagram-news.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -101,6 +102,17 @@ test('il catalogo media alimenta ricerche mirate per le tre squadre', async () =
   assert.match(updater, /catalogSearches/)
   assert.match(updater, /perugiaOfficialNews/)
   assert.match(updater, /altinoOfficialNews/)
+  assert.match(updater, /mateseInstagramNews/)
+})
+test('estrae soltanto le pubblicazioni volley dal profilo pubblico Matese', () => {
+  const payload = { items: [
+    { pk: '1', code: 'VOLLEY1', taken_at: 1785931200, caption: { text: 'Serie B2: nuova schiacciatrice per il roster della pallavolo Matese.' }, image_versions2: { candidates: [{ url: 'https://example.test/atleta.jpg' }] } },
+    { pk: '2', code: 'BASKET1', taken_at: 1785931300, caption: { text: 'La prima squadra di basket torna in palestra.' } },
+  ] }
+  const items = instagramVolleyItems(payload, { team: 'matese', source: 'Instagram ufficiale Matese' })
+  assert.equal(items.length, 1)
+  assert.equal(items[0].url, 'https://www.instagram.com/p/VOLLEY1/')
+  assert.equal(items[0].image, 'https://example.test/atleta.jpg')
 })
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')

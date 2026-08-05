@@ -4,6 +4,7 @@ import { mergeNewsItems } from '../src/lib/news-items.mjs'
 import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
+import { instagramVolleyItems } from '../src/lib/instagram-news.mjs'
 
 const outputUrl = new URL('../public/news.json', import.meta.url)
 const localFallback = JSON.parse(await readFile(outputUrl, 'utf8'))
@@ -19,10 +20,10 @@ const decode = (value = '') => value
   .replace(/\s+/g, ' ')
   .trim()
 
-async function get(url) {
+async function get(url, extraHeaders = {}) {
   const requestUrl = new URL(url)
   requestUrl.searchParams.set('_vf', Date.now().toString())
-  const response = await fetch(requestUrl, { cache: 'no-store', signal: AbortSignal.timeout(12_000), headers: { 'cache-control': 'no-cache', pragma: 'no-cache', 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)' } })
+  const response = await fetch(requestUrl, { cache: 'no-store', signal: AbortSignal.timeout(12_000), headers: { 'cache-control': 'no-cache', pragma: 'no-cache', 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)', ...extraHeaders } })
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`)
   return response.text()
 }
@@ -181,11 +182,19 @@ const catalogSearches = Object.keys(catalogTopics).flatMap((team) => searchableS
   return { id: `catalog-${team}-${index + 1}`, team, label: `Catalogo media ${team} · gruppo ${index + 1}`, query, filter: catalogFilters[team] }
 }))
 
+const mateseInstagramUrl = 'https://www.instagram.com/api/v1/feed/user/3063055134/?count=12'
+const mateseInstagramNews = () => get(mateseInstagramUrl, {
+  'user-agent': 'Instagram 219.0.0.12.117 Android',
+  'x-ig-app-id': '936619743392459',
+  accept: 'application/json',
+}).then((json) => instagramVolleyItems(json, { team: 'matese', source: 'Instagram ufficiale Matese' }))
+
 const sourceTasks = [
   { id: 'matese-curated', team: 'matese', label: 'Archivio Matese verificato', url: 'https://www.puntosportstadio.it/', run: () => Promise.resolve(curatedMatese) },
   { id: 'athletes-curated', team: null, label: 'Profili atleti verificati', url: '', run: () => Promise.resolve(curatedAthletes) },
   { id: 'altino-official', team: 'altino', label: 'Sito ufficiale Altino', url: 'https://www.altinovolley.it/', run: altinoOfficialNews },
   { id: 'perugia-official', team: 'perugia', label: 'Sito ufficiale Perugia', url: 'https://www.sirsafetyperugia.it/new/', run: perugiaOfficialNews },
+  { id: 'matese-instagram-public', team: 'matese', label: 'Instagram pubblico Matese', url: 'https://www.instagram.com/polisportivamatese/', run: mateseInstagramNews },
   { id: 'matese-guiscards', team: 'matese', label: 'Salerno Guiscards', url: 'https://www.guiscards.it/', run: () => get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', mateseFilter).slice(0, 6)) },
   { id: 'matese-sportcasertano', team: 'matese', label: 'SportCasertano', url: 'https://www.sportcasertano.it/', run: () => get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', mateseFilter).slice(0, 6)) },
   { id: 'matese-puntosport', team: 'matese', label: 'Punto Sport Stadio', url: 'https://www.puntosportstadio.it/', run: () => get('https://www.puntosportstadio.it/?feed=rss2').then((xml) => rssItems(xml, 'matese', 'Punto Sport Stadio', mateseFilter).slice(0, 6)) },
@@ -214,7 +223,6 @@ const sources = sourceTasks.map((source, index) => {
   { id: 'altino-facebook', team: 'altino', label: 'Facebook Altino', url: 'https://www.facebook.com/altinovolley/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
   { id: 'altino-instagram', team: 'altino', label: 'Instagram Altino', url: 'https://www.instagram.com/altinovolley.official/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
   { id: 'matese-facebook', team: 'matese', label: 'Facebook Matese', url: 'https://www.facebook.com/polisportiva.matese', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
-  { id: 'matese-instagram', team: 'matese', label: 'Instagram Matese', url: 'https://www.instagram.com/polisportivamatese/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
   { id: 'perugia-facebook', team: 'perugia', label: 'Facebook Perugia', url: 'https://www.facebook.com/SirSafetyPerugiaVolley/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
   { id: 'perugia-instagram', team: 'perugia', label: 'Instagram Perugia', url: 'https://www.instagram.com/sirsafetyperugia/', mode: 'direct', status: 'link-only', checkedAt, itemsFound: 0 },
 ])
