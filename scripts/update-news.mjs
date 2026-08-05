@@ -141,6 +141,15 @@ const athleteSearches = [
 const googleNewsFeed = (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=it&gl=IT&ceid=IT:it`
 const mateseFilter = (text) => /matese/i.test(text) && /volley|pallavol|serie b2/i.test(text)
 
+async function perugiaOfficialNews() {
+  try {
+    return perugiaItems(await get('https://www.sirsafetyperugia.it/new/'))
+  } catch {
+    const query = googleNewsFeed('site:sirsafetyperugia.it/new/ "Sir Susa Scai Perugia"')
+    return rssItems(await get(query), 'perugia', 'Sito ufficiale', (text) => /perugia/i.test(text)).slice(0, 8)
+  }
+}
+
 const teamSearches = [
   { id: 'altino-media', team: 'altino', label: 'Media: Altino Volley', query: '"Altino Volley" pallavolo', filter: (text) => /altino/i.test(text) && /volley|pallavol/i.test(text) },
   { id: 'matese-media', team: 'matese', label: 'Media: Matese Volley', query: '"Polisportiva Matese" pallavolo OR volley', filter: mateseFilter },
@@ -166,7 +175,7 @@ const sourceTasks = [
   { id: 'matese-curated', team: 'matese', label: 'Archivio Matese verificato', url: 'https://www.puntosportstadio.it/', run: () => Promise.resolve(curatedMatese) },
   { id: 'athletes-curated', team: null, label: 'Profili atleti verificati', url: '', run: () => Promise.resolve(curatedAthletes) },
   { id: 'altino-official', team: 'altino', label: 'Sito ufficiale Altino', url: 'https://www.altinovolley.it/', run: () => get('https://www.altinovolley.it/wp-json/wp/v2/posts?per_page=30&_fields=date_gmt,link,title,excerpt').then(altinoItems) },
-  { id: 'perugia-official', team: 'perugia', label: 'Sito ufficiale Perugia', url: 'https://www.sirsafetyperugia.it/new/', run: () => get('https://www.sirsafetyperugia.it/new/').then(perugiaItems) },
+  { id: 'perugia-official', team: 'perugia', label: 'Sito ufficiale Perugia', url: 'https://www.sirsafetyperugia.it/new/', run: perugiaOfficialNews },
   { id: 'matese-guiscards', team: 'matese', label: 'Salerno Guiscards', url: 'https://www.guiscards.it/', run: () => get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', mateseFilter).slice(0, 6)) },
   { id: 'matese-sportcasertano', team: 'matese', label: 'SportCasertano', url: 'https://www.sportcasertano.it/', run: () => get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', mateseFilter).slice(0, 6)) },
   { id: 'matese-puntosport', team: 'matese', label: 'Punto Sport Stadio', url: 'https://www.puntosportstadio.it/', run: () => get('https://www.puntosportstadio.it/?feed=rss2').then((xml) => rssItems(xml, 'matese', 'Punto Sport Stadio', mateseFilter).slice(0, 6)) },
