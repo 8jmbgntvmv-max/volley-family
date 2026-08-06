@@ -194,12 +194,44 @@ const mateseInstagramNews = async () => {
   return items.filter(Boolean)
 }
 
+async function submittedSocialNews() {
+  const supabaseUrl = String(process.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
+  const anonKey = String(process.env.VITE_SUPABASE_ANON_KEY ?? '')
+  if (!supabaseUrl || !anonKey) return []
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/vf_list_public_news_links`, {
+    method: 'POST',
+    signal: AbortSignal.timeout(12_000),
+    headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}`, 'Content-Type': 'application/json' },
+    body: '{}',
+  })
+  if (response.status === 404) return []
+  if (!response.ok) throw new Error(`Annunci social: HTTP ${response.status}`)
+  const links = await response.json()
+  return Promise.all((links ?? []).flatMap((link) => {
+    if (!['altino', 'matese', 'perugia'].includes(link.team) || !link.url || !link.title) return []
+    const fallbackItem = {
+      id: `social-submitted-${link.id}`,
+      team: link.team,
+      title: link.title,
+      url: link.url,
+      source: 'Social ufficiale segnalato dalla famiglia',
+      publishedAt: link.createdAt,
+      summary: 'Annuncio pubblicato sul canale social della società e segnalato dalla famiglia.',
+    }
+    if (!/^https:\/\/(www\.)?instagram\.com\/(p|reel)\//i.test(link.url)) return [Promise.resolve(fallbackItem)]
+    return [get(`https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(link.url)}`, { accept: 'application/json' })
+      .then((json) => instagramOembedItem(json, { team: link.team, source: 'Instagram ufficiale', url: link.url }) ?? fallbackItem)
+      .catch(() => fallbackItem)]
+  }))
+}
+
 const sourceTasks = [
   { id: 'matese-curated', team: 'matese', label: 'Archivio Matese verificato', url: 'https://www.puntosportstadio.it/', run: () => Promise.resolve(curatedMatese) },
   { id: 'athletes-curated', team: null, label: 'Profili atleti verificati', url: '', run: () => Promise.resolve(curatedAthletes) },
   { id: 'altino-official', team: 'altino', label: 'Sito ufficiale Altino', url: 'https://www.altinovolley.it/', run: altinoOfficialNews },
   { id: 'perugia-official', team: 'perugia', label: 'Sito ufficiale Perugia', url: 'https://www.sirsafetyperugia.it/new/', run: perugiaOfficialNews },
   { id: 'matese-instagram-public', team: 'matese', label: 'Instagram pubblico Matese', url: 'https://www.instagram.com/polisportivamatese/', run: mateseInstagramNews },
+  { id: 'family-social-links', team: null, label: 'Annunci social segnalati', url: '', run: submittedSocialNews },
   { id: 'matese-guiscards', team: 'matese', label: 'Salerno Guiscards', url: 'https://www.guiscards.it/', run: () => get('https://www.guiscards.it/feed/').then((xml) => rssItems(xml, 'matese', 'Salerno Guiscards', mateseFilter).slice(0, 6)) },
   { id: 'matese-sportcasertano', team: 'matese', label: 'SportCasertano', url: 'https://www.sportcasertano.it/', run: () => get('https://www.sportcasertano.it/feed/').then((xml) => rssItems(xml, 'matese', 'SportCasertano', mateseFilter).slice(0, 6)) },
   { id: 'matese-puntosport', team: 'matese', label: 'Punto Sport Stadio', url: 'https://www.puntosportstadio.it/', run: () => get('https://www.puntosportstadio.it/?feed=rss2').then((xml) => rssItems(xml, 'matese', 'Punto Sport Stadio', mateseFilter).slice(0, 6)) },

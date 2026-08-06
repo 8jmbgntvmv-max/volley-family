@@ -13,6 +13,17 @@ La bacheca usa l'accesso anonimo di Supabase: ogni telefono riceve un'identità 
 
 La chiave anonima è pubblica per natura; la protezione dei dati è affidata alle funzioni SQL e alle identità anonime. Le tabelle non sono accessibili direttamente dal browser.
 
+## Pulsante Cerca ora
+
+Il pulsante News può avviare davvero il workflow di ricerca, senza attendere la pianificazione di GitHub:
+
+1. Crea su GitHub un token fine-grained limitato al repository `8jmbgntvmv-max/volley-family`, con il solo permesso repository `Actions: Read and write`.
+2. In Supabase apri `Integrations > Vault`, crea un nuovo secret e usa il nome esatto `vf_github_actions_token`. Incolla il token soltanto nel campo protetto `Secret`, non nel SQL Editor o nel repository.
+3. Nel SQL Editor esegui tutto il file `supabase/news-refresh.sql`.
+4. Ogni familiare deve aver completato una volta l’accesso nella sezione Bacheca; questo impedisce richieste anonime esterne e limita una scansione ogni tre minuti.
+
+La stessa configurazione abilita “Segnala un annuncio social”: il collegamento Instagram o Facebook viene salvato, letto dal workflow e aggiunto alle News. Il token resta cifrato nel Vault Supabase e non viene inserito nell’app o nel repository.
+
 ## Sviluppo
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

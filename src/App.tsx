@@ -134,17 +134,35 @@ function HomeMatchFocus({ news, onOpenNews }: { news: NewsItem[]; onOpenNews: ()
   </section>
 }
 
-function NewsRefreshPanel({ updatedAt, sourceStates, refreshing, message, onRefresh }: {
+function NewsRefreshPanel({ updatedAt, sourceStates, refreshing, socialSubmitting, message, onRefresh, onSubmitSocial }: {
   updatedAt: string | null
   sourceStates: NewsSourceState[]
   refreshing: boolean
+  socialSubmitting: boolean
   message: string
   onRefresh: () => void
+  onSubmitSocial: (value: { team: TeamId; title: string; url: string }) => Promise<boolean>
 }) {
+  const [socialTeam, setSocialTeam] = useState<TeamId>('matese')
+  const [socialTitle, setSocialTitle] = useState('')
+  const [socialUrl, setSocialUrl] = useState('')
   const automatic = sourceStates.filter((source) => source.mode === 'automatic')
   const succeeded = automatic.filter((source) => source.status === 'ok').length
   const failed = automatic.filter((source) => source.status === 'error').length
-  return <section className="news-refresh-panel" aria-live="polite"><div className="news-refresh-heading"><div><p className="eyebrow">Ricerca delle fonti</p><strong>{updatedAt ? `Ultimo controllo: ${scanDate.format(new Date(updatedAt))}` : 'Controllo non ancora disponibile'}</strong><small>{automatic.length ? `${succeeded}/${automatic.length} fonti automatiche raggiunte${failed ? ` · ${failed} non disponibili` : ''}` : 'Elenco fonti in caricamento'}</small></div><button onClick={onRefresh} disabled={refreshing}>{refreshing ? 'RICERCA…' : 'AGGIORNAMENTO'}</button></div>{message && <p className="news-refresh-message">{message}</p>}<details><summary>Vedi fonti controllate <b>＋</b></summary><div className="news-source-statuses">{sourceStates.map((source) => <a href={source.url || undefined} target={source.url ? '_blank' : undefined} rel={source.url ? 'noreferrer' : undefined} className={source.status} key={source.id}><span>{source.status === 'ok' ? '✓' : source.status === 'error' ? '!' : '↗'}</span><div><strong>{source.label}</strong><small>{source.status === 'ok' ? `${source.itemsFound} elementi trovati` : source.status === 'error' ? 'Fonte non raggiunta nell’ultimo controllo' : 'Canale social: apertura diretta'}</small></div></a>)}</div></details><p className="news-refresh-note">La ricerca completa viene eseguita online periodicamente. Il comando acquisisce subito l’ultimo controllo pubblicato; i social che impediscono la lettura automatica restano disponibili come collegamenti diretti.</p></section>
+  const submitSocial = async (event: FormEvent) => {
+    event.preventDefault()
+    if (await onSubmitSocial({ team: socialTeam, title: socialTitle, url: socialUrl })) {
+      setSocialTitle('')
+      setSocialUrl('')
+    }
+  }
+  return <section className="news-refresh-panel" aria-live="polite">
+    <div className="news-refresh-heading"><div><p className="eyebrow">Ricerca delle fonti</p><strong>{updatedAt ? `Ultimo controllo: ${scanDate.format(new Date(updatedAt))}` : 'Controllo non ancora disponibile'}</strong><small>{automatic.length ? `${succeeded}/${automatic.length} fonti automatiche raggiunte${failed ? ` · ${failed} non disponibili` : ''}` : 'Elenco fonti in caricamento'}</small></div><button onClick={onRefresh} disabled={refreshing}>{refreshing ? 'RICERCA IN CORSO…' : 'CERCA ORA'}</button></div>
+    {message && <p className="news-refresh-message">{message}</p>}
+    <details><summary>Vedi fonti controllate <b>＋</b></summary><div className="news-source-statuses">{sourceStates.map((source) => <a href={source.url || undefined} target={source.url ? '_blank' : undefined} rel={source.url ? 'noreferrer' : undefined} className={source.status} key={source.id}><span>{source.status === 'ok' ? '✓' : source.status === 'error' ? '!' : '↗'}</span><div><strong>{source.label}</strong><small>{source.status === 'ok' ? `${source.itemsFound} elementi trovati` : source.status === 'error' ? 'Fonte non raggiunta nell’ultimo controllo' : 'Canale social: apertura diretta'}</small></div></a>)}</div></details>
+    <details className="social-news-submit"><summary>Segnala un annuncio social <b>＋</b></summary><form onSubmit={submitSocial}><p>Instagram e Facebook non permettono sempre di scoprire automaticamente i nuovi post. Incolla qui il collegamento ufficiale: entrerà nella prossima ricerca.</p><label>Squadra<select value={socialTeam} onChange={(event) => setSocialTeam(event.target.value as TeamId)}>{teams.map((team) => <option value={team.id} key={team.id}>{team.shortName}</option>)}</select></label><label>Titolo o nome dell’atleta<input value={socialTitle} onChange={(event) => setSocialTitle(event.target.value)} minLength={3} maxLength={180} required placeholder="Es. Carola Nasi confermata" /></label><label>Collegamento Instagram o Facebook<input type="url" value={socialUrl} onChange={(event) => setSocialUrl(event.target.value)} required placeholder="https://www.instagram.com/p/…" /></label><button disabled={socialSubmitting}>{socialSubmitting ? 'SALVATAGGIO…' : 'AGGIUNGI E CERCA'}</button></form></details>
+    <p className="news-refresh-note">“Cerca ora” avvia una nuova scansione sul server e attende la pubblicazione. Gli annunci social segnalati vengono controllati insieme alle fonti giornalistiche.</p>
+  </section>
 }
 
 function NewsSourceCatalog() {
@@ -397,6 +415,7 @@ function App() {
   const [newsUpdatedAt, setNewsUpdatedAt] = useState<string | null>(null)
   const [newsSourceStates, setNewsSourceStates] = useState<NewsSourceState[]>([])
   const [newsRefreshing, setNewsRefreshing] = useState(false)
+  const [newsSocialSubmitting, setNewsSocialSubmitting] = useState(false)
   const [newsRefreshMessage, setNewsRefreshMessage] = useState('')
   const [results, setResults] = useState<ResultsByMatch>({})
   const [leagueData, setLeagueData] = useState<LeagueData | null>(null)
@@ -418,28 +437,67 @@ function App() {
   const unreadUpdates = useMemo(() => visibleUpdates.filter((item) => !seenIds.has(item.id)), [visibleUpdates, seenIds])
 
   const loadData = useCallback(async (manual = false) => {
-    if (manual) { setNewsRefreshing(true); setNewsRefreshMessage('Controllo degli aggiornamenti pubblicati…') }
-    const version = Date.now()
-    const options: RequestInit = { cache: 'no-store' }
-    const json = (path: string) => fetch(`${import.meta.env.BASE_URL}${path}?v=${version}`, options).then((response) => {
+    if (manual) { setNewsRefreshing(true); setNewsRefreshMessage('Avvio di una nuova ricerca delle fonti…') }
+    const json = (path: string) => fetch(`${import.meta.env.BASE_URL}${path}?v=${Date.now()}`, { cache: 'no-store' }).then((response) => {
       if (!response.ok) throw new Error(`${path}: ${response.status}`)
       return response.json()
     })
-    const [newsResponse, resultsResponse, leagueResponse] = await Promise.allSettled([
-      json('news.json'), json('results.json'), json('league-data.json'),
-    ])
-    if (newsResponse.status === 'fulfilled') {
-      const payload = newsResponse.value
+    const applyNews = (payload: { items?: NewsItem[]; updatedAt?: string; sources?: NewsSourceState[] }) => {
       setNews(payload.items ?? [])
       setNewsUpdatedAt(payload.updatedAt ?? null)
       setNewsSourceStates(payload.sources ?? [])
-      if (manual) setNewsRefreshMessage(`Aggiornamento acquisito: ${payload.items?.length ?? 0} news disponibili${payload.updatedAt ? ` · ricerca online del ${scanDate.format(new Date(payload.updatedAt))}` : ''}.`)
-    } else if (manual) setNewsRefreshMessage('Non è stato possibile raggiungere il servizio News. Riprova tra poco.')
+      return payload.updatedAt ?? null
+    }
+    const [newsResponse, resultsResponse, leagueResponse] = await Promise.allSettled([json('news.json'), json('results.json'), json('league-data.json')])
+    const baseline = newsResponse.status === 'fulfilled' ? applyNews(newsResponse.value) : null
     if (resultsResponse.status === 'fulfilled') setResults(Object.fromEntries((resultsResponse.value.items ?? []).map((item: MatchResult) => [item.matchNumber, item])))
     if (leagueResponse.status === 'fulfilled') setLeagueData(leagueResponse.value)
     setDataReady(true)
-    if (manual) setNewsRefreshing(false)
-  }, [])
+    if (!manual) return
+    if (newsResponse.status !== 'fulfilled') {
+      setNewsRefreshMessage('Non è stato possibile raggiungere il servizio News. Riprova tra poco.')
+      setNewsRefreshing(false)
+      return
+    }
+    try {
+      const request = await boardClient.requestNewsRefresh()
+      setNewsRefreshMessage(request.accepted ? 'Ricerca avviata. Attendo la pubblicazione dei nuovi dati…' : 'Una ricerca è già in corso. Attendo il risultato…')
+      for (let attempt = 0; attempt < 24; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 5_000))
+        const payload = await json('news.json')
+        const current = applyNews(payload)
+        if (current && current !== baseline) {
+          setNewsRefreshMessage(`Ricerca completata: ${payload.items?.length ?? 0} news disponibili · controllo del ${scanDate.format(new Date(current))}.`)
+          return
+        }
+      }
+      setNewsRefreshMessage('La ricerca è stata avviata, ma GitHub non ha ancora pubblicato il risultato. Puoi chiudere l’app: verrà acquisito automaticamente.')
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      if (code === 'VF_NOT_MEMBER') setNewsRefreshMessage('Per avviare la ricerca apri prima Bacheca, scegli il tuo nome e unisciti alla famiglia.')
+      else if (code === 'VF_REFRESH_NOT_CONFIGURED') setNewsRefreshMessage('Il collegamento sicuro per avviare la ricerca non è ancora configurato.')
+      else setNewsRefreshMessage('Non è stato possibile avviare una nuova ricerca. Ho comunque acquisito l’ultimo controllo pubblicato.')
+    } finally {
+      setNewsRefreshing(false)
+    }
+  }, [boardClient])
+
+  const submitSocialNews = async (value: { team: TeamId; title: string; url: string }) => {
+    setNewsSocialSubmitting(true)
+    try {
+      await boardClient.submitNewsLink(value)
+      setNewsRefreshMessage('Annuncio salvato. Avvio la ricerca del contenuto ufficiale…')
+      await loadData(true)
+      return true
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      if (code === 'VF_NOT_MEMBER') setNewsRefreshMessage('Per segnalare un annuncio apri prima Bacheca e unisciti alla famiglia.')
+      else setNewsRefreshMessage(code || 'Non è stato possibile salvare questo annuncio.')
+      return false
+    } finally {
+      setNewsSocialSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -535,7 +593,7 @@ function App() {
       </>}
       {screen === 'agenda' && <section className="page"><WeekendVolley news={news} sourceStates={newsSourceStates} updatedAt={newsUpdatedAt} onOpenNews={(team) => { setNewsFilter(team); setScreen('news') }} /><div className="calendar-divider"><p className="eyebrow">Agenda completa</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza suggerimenti né graduatorie. I risultati ufficiali FIPAV di Matese vengono aggiornati automaticamente.</p></div><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
       {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div>{team.id === 'matese' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali FIPAV nazionale, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{matches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={match.matchNumber ? results[match.matchNumber] : undefined} /></div>)}</section>)}</section>}
-      {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><NewsRefreshPanel updatedAt={newsUpdatedAt} sourceStates={newsSourceStates.filter((source) => newsFilter === 'all' || source.team === newsFilter || source.team === null)} refreshing={newsRefreshing} message={newsRefreshMessage} onRefresh={() => { void loadData(true) }} /><NewsSourceCatalog /><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
+      {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><NewsRefreshPanel updatedAt={newsUpdatedAt} sourceStates={newsSourceStates.filter((source) => newsFilter === 'all' || source.team === newsFilter || source.team === null)} refreshing={newsRefreshing} socialSubmitting={newsSocialSubmitting} message={newsRefreshMessage} onRefresh={() => { void loadData(true) }} onSubmitSocial={submitSocialNews} /><NewsSourceCatalog /><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
       {screen === 'updates' && <UpdatesCenter updates={visibleUpdates} seenIds={seenIds} preferences={preferences} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onOpenResults={() => setScreen('agenda')} />}
       {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} />}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}

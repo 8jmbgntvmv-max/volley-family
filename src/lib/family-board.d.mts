@@ -15,6 +15,8 @@ export type FamilyBoardClient = {
   list: () => Promise<FamilyBoardMessage[]>
   post: (message: { content: string; kind: FamilyBoardKind; matchId: string | null }) => Promise<unknown>
   remove: (id: string) => Promise<unknown>
+  requestNewsRefresh: () => Promise<{ accepted: boolean; reason?: string; requestedAt?: string; requestId?: number }>
+  submitNewsLink: (news: { team: 'altino' | 'matese' | 'perugia'; title: string; url: string }) => Promise<unknown>
 }
 export function isFamilyBoardConfigured(config?: { url?: string; anonKey?: string }): boolean
 export function validateFamilyBoardPost(value?: string): { valid: false; error: string } | { valid: true; content: string }

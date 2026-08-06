@@ -23,6 +23,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run news:update
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - run: npm run results:update
       - run: npm run league:update
       - run: npm run lint

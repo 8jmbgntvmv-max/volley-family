@@ -1,5 +1,13 @@
 const volleyTerms = /volley|pallavol|serie\s*b2|roster|schiacciatric|centrale|palleggiatric|oppost[oa]|liber[oa]|giocatric|atleta/i
 
+export function instagramPublishedAt(mediaId) {
+  const raw = String(mediaId ?? '').split('_')[0]
+  if (!/^\d+$/.test(raw)) return undefined
+  const milliseconds = (BigInt(raw) >> 23n) + 1314220021721n
+  const date = new Date(Number(milliseconds))
+  return Number.isNaN(date.valueOf()) ? undefined : date.toISOString()
+}
+
 export function instagramVolleyItems(json, { team, source }) {
   const payload = typeof json === 'string' ? JSON.parse(json) : json
   return (payload.items ?? []).flatMap((post) => {
@@ -31,7 +39,7 @@ export function instagramOembedItem(json, { team, source, url, publishedAt }) {
     title: title || 'Nuova pubblicazione della società',
     url,
     source,
-    publishedAt,
+    publishedAt: publishedAt ?? instagramPublishedAt(payload.media_id) ?? new Date().toISOString(),
     image: payload.thumbnail_url,
     summary: caption.slice(0, 500),
   }
