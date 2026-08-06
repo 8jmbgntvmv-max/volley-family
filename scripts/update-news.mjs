@@ -96,6 +96,24 @@ async function articleDetails(url) {
 
 const curatedMatese = [
   {
+    id: 'matese-facebook-iole-avecone-2026-08-06',
+    team: 'matese',
+    title: 'Iole Isabella Avecone confermata dalla FAAM Matese',
+    url: 'https://www.facebook.com/share/p/19aHw3rNoA/?mibextid=wwXIfr',
+    source: 'Facebook ufficiale Matese',
+    publishedAt: '2026-08-06T12:00:00.000Z',
+    summary: 'La FAAM Matese ha ufficializzato Iole Isabella Avecone per la nuova stagione. Schiacciatrice, classe 2000.',
+  },
+  {
+    id: 'matese-facebook-marlene-silva-ascensao-2026-08-06',
+    team: 'matese',
+    title: 'Marlene Silva Ascensao confermata dalla FAAM Matese',
+    url: 'https://www.facebook.com/share/p/1MRFonQEqB/?mibextid=wwXIfr',
+    source: 'Facebook ufficiale Matese',
+    publishedAt: '2026-08-06T12:00:00.000Z',
+    summary: 'La FAAM Matese ha ufficializzato Marlene Silva Ascensao per la nuova stagione. Centrale, classe 1991.',
+  },
+  {
     id: 'matese-punto-sport-stadio-2026-06-18',
     team: 'matese',
     title: 'Polisportiva Matese, si chiude il ciclo Scappaticcio: fine di un percorso importante in Serie B2',

@@ -136,6 +136,16 @@ test('trasforma il post ufficiale Matese in una news con anteprima', () => {
   assert.equal(item.image, 'https://example.test/carola-nasi.jpg')
   assert.equal(instagramPublishedAt('3956350959856672093_3063055134'), '2026-08-04T14:30:08.859Z')
 })
+test('include le conferme Facebook di Iole Avecone e Marlene Silva Ascensao', async () => {
+  const [updater, roster] = await Promise.all([
+    readFile(new URL('../scripts/update-news.mjs', import.meta.url), 'utf8'),
+    readFile(new URL('../src/data/rosters.ts', import.meta.url), 'utf8'),
+  ])
+  assert.match(updater, /facebook\.com\/share\/p\/19aHw3rNoA/)
+  assert.match(updater, /facebook\.com\/share\/p\/1MRFonQEqB/)
+  assert.match(roster, /Iole Isabella Avecone', role: 'Schiacciatrice'/)
+  assert.match(roster, /Marlene Silva Ascensao', role: 'Centrale'/)
+})
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')
   assert.equal(classifyMatchFocus('Vittoria in rimonta nel post partita'), 'post')
