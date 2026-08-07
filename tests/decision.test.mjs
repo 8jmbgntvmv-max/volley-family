@@ -9,7 +9,7 @@ import { googleMapsDirectionsUrl } from '../src/lib/maps.mjs'
 import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { parseLfvPlayerStats } from '../src/lib/league-stats.mjs'
-import { buildUpdateItems, unreadUpdateItems } from '../src/lib/update-center.mjs'
+import { buildUpdateItems, todaysUpdateItems, unreadUpdateItems, updateDateKey } from '../src/lib/update-center.mjs'
 import { isFamilyBoardConfigured, validateFamilyBoardPost } from '../src/lib/family-board.mjs'
 import { athleteMediaLinks } from '../src/lib/athlete-media.mjs'
 import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
@@ -234,6 +234,14 @@ test('Novità non ripete le news già lette', () => {
     { id: 'news:nuova', title: 'Nuova' },
   ]
   assert.deepEqual(unreadUpdateItems(items, new Set(['news:letta'])), [items[1]])
+})
+test('Novità da leggere mostra soltanto gli aggiornamenti del giorno', () => {
+  const items = [
+    { id: 'oggi', publishedAt: '2026-08-07T08:00:00Z' },
+    { id: 'ieri', publishedAt: '2026-08-06T22:00:00Z' },
+  ]
+  assert.deepEqual(todaysUpdateItems(items, '2026-08-07'), [items[0]])
+  assert.equal(updateDateKey(new Date('2026-08-07T22:30:00Z')), '2026-08-08')
 })
 test('il pulsante Novità è riconoscibile dal testo', async () => {
   const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')

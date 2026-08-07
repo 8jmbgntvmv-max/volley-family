@@ -42,3 +42,15 @@ export function buildUpdateItems(news = [], results = {}, matches = []) {
 export function unreadUpdateItems(items = [], seenIds = new Set()) {
   return items.filter((item) => !seenIds.has(item.id))
 }
+
+export function updateDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('it-IT', {
+    timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date)
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${value.year}-${value.month}-${value.day}`
+}
+
+export function todaysUpdateItems(items = [], today = updateDateKey()) {
+  return items.filter((item) => String(item.publishedAt ?? '').slice(0, 10) === today)
+}

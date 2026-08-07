@@ -5,7 +5,7 @@ import './LiveStreams.css'
 import { groupByWeekend } from './lib/decision.mjs'
 import { googleMapsDirectionsUrl } from './lib/maps.mjs'
 import { classifyMatchFocus, type MatchFocus } from './lib/news-focus.mjs'
-import { buildUpdateItems, unreadUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
+import { buildUpdateItems, todaysUpdateItems, unreadUpdateItems, type UpdateItem, type UpdateKind } from './lib/update-center.mjs'
 import { createFamilyBoardClient, validateFamilyBoardPost, type FamilyBoardKind, type FamilyBoardMessage } from './lib/family-board.mjs'
 import { athleteMediaLinks } from './lib/athlete-media.mjs'
 import { youtubeLiveUrl } from './lib/live-streams.mjs'
@@ -268,13 +268,13 @@ function UpdatesCenter({ updates, seenIds, preferences, onPreferences, onMarkRea
   onMarkAll: () => void
   onOpenResults: () => void
 }) {
-  const pendingUpdates = unreadUpdateItems(updates, seenIds)
+  const pendingUpdates = unreadUpdateItems(todaysUpdateItems(updates), seenIds)
   const unreadCount = pendingUpdates.length
   const toggleKind = (kind: UpdateKind) => onPreferences({ ...preferences, [kind]: !preferences[kind] })
   const toggleTeam = (team: TeamId) => onPreferences({ ...preferences, teams: { ...preferences.teams, [team]: !preferences.teams[team] } })
-  return <section className="page updates-page"><p className="eyebrow">Controllo aggiornamenti</p><div className="updates-page-heading"><div><h2>Novità</h2><p>{unreadCount ? `${unreadCount} da leggere` : 'Sei in pari con gli aggiornamenti'}</p></div>{unreadCount > 0 && <button onClick={onMarkAll}>Segna tutto come letto</button>}</div>
+  return <section className="page updates-page"><p className="eyebrow">Aggiornamenti di oggi</p><div className="updates-page-heading"><div><h2>Novità</h2><p>{unreadCount ? `${unreadCount} di oggi da leggere` : 'Sei in pari con gli aggiornamenti di oggi'}</p></div>{unreadCount > 0 && <button onClick={onMarkAll}>Segna tutto come letto</button>}</div>
     <article className="updates-settings"><details><summary><div><strong>Cosa vuoi seguire</strong><small>Le preferenze restano salvate su questo telefono</small></div><b>＋</b></summary><div className="preference-group"><span>Tipologia</span><div>{(Object.keys(updateKindLabels) as UpdateKind[]).map((kind) => <label key={kind}><input type="checkbox" checked={preferences[kind]} onChange={() => toggleKind(kind)} />{updateKindLabels[kind]}</label>)}</div></div><div className="preference-group"><span>Squadre</span><div>{teams.map((team) => <label key={team.id}><input type="checkbox" checked={preferences.teams[team.id]} onChange={() => toggleTeam(team.id)} />{team.shortName}</label>)}</div></div></details></article>
-    <div className="updates-list">{pendingUpdates.slice(0, 60).map((item) => <UpdateRow key={item.id} item={item} unread onRead={onMarkRead} onOpenResults={onOpenResults} />)}{pendingUpdates.length === 0 && <div className="detail-empty"><strong>Nessun nuovo aggiornamento</strong><span>Le notizie già lette restano disponibili nella sezione News.</span></div>}</div>
+    <div className="updates-list">{pendingUpdates.slice(0, 60).map((item) => <UpdateRow key={item.id} item={item} unread onRead={onMarkRead} onOpenResults={onOpenResults} />)}{pendingUpdates.length === 0 && <div className="detail-empty"><strong>Nessun nuovo aggiornamento oggi</strong><span>Le notizie dei giorni precedenti restano disponibili nella sezione News.</span></div>}</div>
   </section>
 }
 
@@ -440,7 +440,8 @@ function App() {
   const liveRosters = useMemo(() => mergeRosterAnnouncements(rosters, news), [news])
   const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
   const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
-  const unreadUpdates = useMemo(() => visibleUpdates.filter((item) => !seenIds.has(item.id)), [visibleUpdates, seenIds])
+  const todayUpdates = useMemo(() => todaysUpdateItems(visibleUpdates), [visibleUpdates])
+  const unreadUpdates = useMemo(() => todayUpdates.filter((item) => !seenIds.has(item.id)), [todayUpdates, seenIds])
 
   const loadData = useCallback(async (manual = false) => {
     if (manual) { setNewsRefreshing(true); setNewsRefreshMessage('Avvio di una nuova ricerca delle fonti…') }
@@ -564,7 +565,7 @@ function App() {
     return next
   })
   const markAllRead = () => setSeenIds((current) => {
-    const next = new Set([...current, ...visibleUpdates.map((item) => item.id)])
+    const next = new Set([...current, ...todayUpdates.map((item) => item.id)])
     localStorage.setItem('vf-seen-updates-v1', JSON.stringify([...next].slice(-500)))
     return next
   })
@@ -600,7 +601,7 @@ function App() {
       {screen === 'agenda' && <section className="page"><WeekendVolley news={news} sourceStates={newsSourceStates} updatedAt={newsUpdatedAt} onOpenNews={(team) => { setNewsFilter(team); setScreen('news') }} /><div className="calendar-divider"><p className="eyebrow">Agenda completa</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza suggerimenti né graduatorie. I risultati ufficiali FIPAV di Matese vengono aggiornati automaticamente.</p></div><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
       {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div>{team.id === 'matese' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali FIPAV nazionale, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{matches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={match.matchNumber ? results[match.matchNumber] : undefined} /></div>)}</section>)}</section>}
       {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><NewsRefreshPanel updatedAt={newsUpdatedAt} sourceStates={newsSourceStates.filter((source) => newsFilter === 'all' || source.team === newsFilter || source.team === null)} refreshing={newsRefreshing} socialSubmitting={newsSocialSubmitting} message={newsRefreshMessage} onRefresh={() => { void loadData(true) }} onSubmitSocial={submitSocialNews} /><NewsSourceCatalog /><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
-      {screen === 'updates' && <UpdatesCenter updates={visibleUpdates} seenIds={seenIds} preferences={preferences} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onOpenResults={() => setScreen('agenda')} />}
+      {screen === 'updates' && <UpdatesCenter updates={todayUpdates} seenIds={seenIds} preferences={preferences} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onOpenResults={() => setScreen('agenda')} />}
       {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} />}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}
     </main>
