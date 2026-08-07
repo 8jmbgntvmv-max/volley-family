@@ -90,7 +90,7 @@ test('News avvia una scansione reale e mostra l’esito delle fonti', async () =
     readFile(new URL('../src/lib/family-board.mjs', import.meta.url), 'utf8'),
     readFile(new URL('../supabase/news-refresh.sql', import.meta.url), 'utf8'),
   ])
-  for (const label of ['CERCA ORA', 'Ultimo controllo:', 'Vedi fonti controllate', 'Segnala un annuncio social', 'Weekend Volley', 'Possibile formazione']) assert.match(app, new RegExp(label))
+  for (const label of ['CERCA ORA', 'Ultimo controllo:', 'Vedi fonti controllate', 'AGGIUNGI POST FACEBOOK / INSTAGRAM', 'Weekend Volley', 'Possibile formazione']) assert.match(app, new RegExp(label))
   assert.match(app, /requestNewsRefresh/)
   assert.match(board, /vf_request_news_refresh/)
   assert.match(sql, /net\.http_post/)
@@ -100,6 +100,16 @@ test('News avvia una scansione reale e mostra l’esito delle fonti', async () =
   assert.match(updater, /vf_list_public_news_links/)
   assert.match(workflow, /workflow_dispatch/)
   assert.match(workflow, /7,22,37,52/)
+})
+test('News distingue le fonti web dalla segnalazione obbligatoria dei nuovi post social', async () => {
+  const [app, updater] = await Promise.all([
+    readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../scripts/update-news.mjs', import.meta.url), 'utf8'),
+  ])
+  assert.match(app, /AGGIUNGI POST FACEBOOK \/ INSTAGRAM/)
+  assert.match(app, /Non può scoprire da solo nuovi post Facebook o Instagram/)
+  assert.match(app, /SALVA NELLE NEWS/)
+  assert.match(updater, /Post Instagram Matese già registrati'.*mode: 'direct'/)
 })
 test('il catalogo media alimenta ricerche mirate per le tre squadre', async () => {
   const updater = await readFile(new URL('../scripts/update-news.mjs', import.meta.url), 'utf8')
