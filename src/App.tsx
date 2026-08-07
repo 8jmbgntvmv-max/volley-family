@@ -11,12 +11,13 @@ import { athleteMediaLinks } from './lib/athlete-media.mjs'
 import { youtubeLiveUrl } from './lib/live-streams.mjs'
 import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from './lib/weekend-volley.mjs'
 import { newsSourceCatalog } from './lib/news-source-catalog.mjs'
+import { encodeRosterSubmission, mergeRosterAnnouncements } from './lib/roster-submission.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
 type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'board' | 'rules' | 'updates'
 type AthleteId = 'chiara-lupoli' | 'camilla-lupoli' | 'luca-loreti'
-type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[]; summary?: string; matchFocus?: MatchFocus }
+type NewsItem = { id: string; team: TeamId; title: string; url: string; source: string; publishedAt: string; image?: string; athleteIds?: AthleteId[]; summary?: string; matchFocus?: MatchFocus; rosterPlayer?: RosterPlayer }
 type NewsSourceState = { id: string; team: TeamId | null; label: string; url: string; mode: 'automatic' | 'direct'; status: 'ok' | 'error' | 'link-only'; checkedAt: string; itemsFound: number }
 type MatchResult = { matchNumber: string; played: boolean; official: boolean; firstTeamSets: number; secondTeamSets: number; sets: { first: number; second: number }[]; sourceUpdatedAt?: string }
 type ResultsByMatch = Record<string, MatchResult>
@@ -144,15 +145,19 @@ function NewsRefreshPanel({ updatedAt, sourceStates, refreshing, socialSubmittin
   onSubmitSocial: (value: { team: TeamId; title: string; url: string }) => Promise<boolean>
 }) {
   const [socialTeam, setSocialTeam] = useState<TeamId>('matese')
+  const [socialKind, setSocialKind] = useState<'news' | 'roster'>('roster')
   const [socialTitle, setSocialTitle] = useState('')
+  const [socialRole, setSocialRole] = useState('')
   const [socialUrl, setSocialUrl] = useState('')
   const automatic = sourceStates.filter((source) => source.mode === 'automatic')
   const succeeded = automatic.filter((source) => source.status === 'ok').length
   const failed = automatic.filter((source) => source.status === 'error').length
   const submitSocial = async (event: FormEvent) => {
     event.preventDefault()
-    if (await onSubmitSocial({ team: socialTeam, title: socialTitle, url: socialUrl })) {
+    const title = socialKind === 'roster' ? encodeRosterSubmission(socialTitle, socialRole) : socialTitle
+    if (await onSubmitSocial({ team: socialTeam, title, url: socialUrl })) {
       setSocialTitle('')
+      setSocialRole('')
       setSocialUrl('')
     }
   }
@@ -160,7 +165,7 @@ function NewsRefreshPanel({ updatedAt, sourceStates, refreshing, socialSubmittin
     <div className="news-refresh-heading"><div><p className="eyebrow">Ricerca delle fonti</p><strong>{updatedAt ? `Ultimo controllo: ${scanDate.format(new Date(updatedAt))}` : 'Controllo non ancora disponibile'}</strong><small>{automatic.length ? `${succeeded}/${automatic.length} fonti web automatiche raggiunte${failed ? ` · ${failed} non disponibili` : ''}` : 'Elenco fonti in caricamento'}</small></div><button onClick={onRefresh} disabled={refreshing}>{refreshing ? 'RICERCA IN CORSO…' : 'CERCA ORA'}</button></div>
     {message && <p className="news-refresh-message">{message}</p>}
     <details><summary>Vedi fonti controllate <b>＋</b></summary><div className="news-source-statuses">{sourceStates.map((source) => <a href={source.url || undefined} target={source.url ? '_blank' : undefined} rel={source.url ? 'noreferrer' : undefined} className={source.status} key={source.id}><span>{source.status === 'ok' ? '✓' : source.status === 'error' ? '!' : '↗'}</span><div><strong>{source.label}</strong><small>{source.status === 'ok' ? `${source.itemsFound} elementi trovati` : source.status === 'error' ? 'Fonte non raggiunta nell’ultimo controllo' : 'Canale social: apertura diretta'}</small></div></a>)}</div></details>
-    <section className="social-news-submit"><div className="social-news-title"><strong>AGGIUNGI POST FACEBOOK / INSTAGRAM</strong><small>Necessario per i nuovi post pubblicati soltanto sui social</small></div><form onSubmit={submitSocial}><p>Facebook e Instagram non consentono a Volley Family di elencare automaticamente i nuovi post. Copia qui il collegamento pubblicato dalla società: verrà inserito nelle News e controllato a ogni aggiornamento.</p><label>Squadra<select value={socialTeam} onChange={(event) => setSocialTeam(event.target.value as TeamId)}>{teams.map((team) => <option value={team.id} key={team.id}>{team.shortName}</option>)}</select></label><label>Titolo o nome dell’atleta<input value={socialTitle} onChange={(event) => setSocialTitle(event.target.value)} minLength={3} maxLength={180} required placeholder="Es. Nuova atleta Matese" /></label><label>Collegamento Instagram o Facebook<input type="url" value={socialUrl} onChange={(event) => setSocialUrl(event.target.value)} required placeholder="https://www.facebook.com/…" /></label><button disabled={socialSubmitting}>{socialSubmitting ? 'SALVATAGGIO…' : 'SALVA NELLE NEWS'}</button></form></section>
+    <section className="social-news-submit"><div className="social-news-title"><strong>AGGIUNGI POST FACEBOOK / INSTAGRAM</strong><small>Il tipo “Nuova atleta” aggiorna insieme News e roster</small></div><form onSubmit={submitSocial}><p>Facebook e Instagram non consentono a Volley Family di elencare automaticamente i nuovi post. Copia qui il collegamento pubblicato dalla società: verrà inserito nelle News e controllato a ogni aggiornamento.</p><label>Tipo di aggiornamento<select value={socialKind} onChange={(event) => setSocialKind(event.target.value as 'news' | 'roster')}><option value="roster">Nuova atleta / roster</option><option value="news">News generica</option></select></label><label>Squadra<select value={socialTeam} onChange={(event) => setSocialTeam(event.target.value as TeamId)}>{teams.map((team) => <option value={team.id} key={team.id}>{team.shortName}</option>)}</select></label><label>{socialKind === 'roster' ? 'Nome e cognome dell’atleta' : 'Titolo della news'}<input value={socialTitle} onChange={(event) => setSocialTitle(event.target.value)} minLength={3} maxLength={socialKind === 'roster' ? 100 : 180} required placeholder={socialKind === 'roster' ? 'Es. Maria Rossi' : 'Es. Presentazione della nuova stagione'} /></label>{socialKind === 'roster' && <label>Ruolo<select value={socialRole} onChange={(event) => setSocialRole(event.target.value)}><option value="">Da verificare</option><option>Palleggiatrice</option><option>Opposto</option><option>Schiacciatrice</option><option>Centrale</option><option>Libero</option></select></label>}<label>Collegamento Instagram o Facebook<input type="url" value={socialUrl} onChange={(event) => setSocialUrl(event.target.value)} required placeholder="https://www.facebook.com/…" /></label><button disabled={socialSubmitting}>{socialSubmitting ? 'SALVATAGGIO…' : socialKind === 'roster' ? 'SALVA IN NEWS E ROSTER' : 'SALVA NELLE NEWS'}</button></form></section>
     <p className="news-refresh-note">“Cerca ora” avvia una scansione delle fonti web e dei collegamenti social già salvati. Non può scoprire da solo nuovi post Facebook o Instagram.</p>
   </section>
 }
@@ -185,8 +190,8 @@ function WeekendVolley({ news, sourceStates, updatedAt, onOpenNews }: { news: Ne
   })}</div></section>
 }
 
-function HomeRosters({ onSelectAthlete }: { onSelectAthlete: (athlete: SelectedAthlete) => void }) {
-  return <section className="home-dashboard" aria-labelledby="home-rosters-title"><div className="dashboard-heading"><div><p className="eyebrow">Stagione 2026/27</p><h2 id="home-rosters-title">Roster</h2></div></div><p className="dashboard-note">Sono mostrati soltanto i nomi già annunciati. Le rose incomplete si aggiornano con le comunicazioni delle società.</p><div className="roster-grid">{rosters.map((roster) => {
+function HomeRosters({ rosterData, onSelectAthlete }: { rosterData: typeof rosters; onSelectAthlete: (athlete: SelectedAthlete) => void }) {
+  return <section className="home-dashboard" aria-labelledby="home-rosters-title"><div className="dashboard-heading"><div><p className="eyebrow">Stagione 2026/27</p><h2 id="home-rosters-title">Roster</h2></div></div><p className="dashboard-note">Sono mostrati soltanto i nomi già annunciati. Una comunicazione salvata come “Nuova atleta / roster” aggiorna automaticamente entrambe le sezioni.</p><div className="roster-grid">{rosterData.map((roster) => {
     const team = teams.find((candidate) => candidate.id === roster.team)!
     const countLabel = roster.team === 'altino' ? '13 atlete · roster presentato' : roster.status === 'complete' ? `${roster.players.length} atleti · completo` : `${roster.players.length} annunciati · in aggiornamento`
     return <details className="roster-card" key={roster.team}><summary><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><strong>{team.shortName}</strong><small>{countLabel}</small></div><b>＋</b></summary><div className="roster-list">{roster.players.map((player) => <button className={player.followed ? 'followed' : ''} key={player.name} onClick={() => onSelectAthlete({ team: roster.team, player })}><span>{player.name}{player.followed && <i>SEGUITO</i>}</span><small>{player.role ?? 'Ruolo da pubblicare'}</small><b aria-hidden="true">›</b></button>)}</div><a className="roster-source" href={roster.sourceUrl} target="_blank" rel="noreferrer">{roster.sourceLabel}</a></details>
@@ -432,6 +437,7 @@ function App() {
   })
   const boardClient = useMemo(() => createFamilyBoardClient({ url: import.meta.env.VITE_SUPABASE_URL, anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY }), [])
   const weekends = useMemo(() => groupByWeekend(matches), [])
+  const liveRosters = useMemo(() => mergeRosterAnnouncements(rosters, news), [news])
   const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
   const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
   const unreadUpdates = useMemo(() => visibleUpdates.filter((item) => !seenIds.has(item.id)), [visibleUpdates, seenIds])
@@ -583,7 +589,7 @@ function App() {
         <HomeFamilyBoard onOpen={() => setScreen('board')} />
         <HomeLiveStreams />
         <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
-        <HomeRosters onSelectAthlete={setSelectedAthlete} />
+        <HomeRosters rosterData={liveRosters} onSelectAthlete={setSelectedAthlete} />
         <HomeResultsAndStandings results={results} leagueData={leagueData} />
         <HomeStatistics results={results} leagueData={leagueData} />
         <section className="section-block"><div className="section-title"><div><p className="eyebrow">Le tue squadre</p><h2>Tre campionati, un’unica agenda</h2></div><button className="text-button" onClick={() => setScreen('teams')}>Vedi tutte</button></div>

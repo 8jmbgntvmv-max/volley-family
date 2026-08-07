@@ -5,6 +5,7 @@ import { classifyMatchFocus } from '../src/lib/news-focus.mjs'
 import { articleSummaryFromHtml } from '../src/lib/news-summary.mjs'
 import { searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
 import { instagramOembedItem } from '../src/lib/instagram-news.mjs'
+import { parseRosterSubmission } from '../src/lib/roster-submission.mjs'
 
 const outputUrl = new URL('../public/news.json', import.meta.url)
 const localFallback = JSON.parse(await readFile(outputUrl, 'utf8'))
@@ -227,18 +228,21 @@ async function submittedSocialNews() {
   const links = await response.json()
   return Promise.all((links ?? []).flatMap((link) => {
     if (!['altino', 'matese', 'perugia'].includes(link.team) || !link.url || !link.title) return []
+    const roster = parseRosterSubmission(link.title)
+    const teamLabel = { altino: 'Altino', matese: 'Matese', perugia: 'Perugia' }[link.team]
     const fallbackItem = {
       id: `social-submitted-${link.id}`,
       team: link.team,
-      title: link.title,
+      title: roster ? `${roster.name} annunciata nel roster ${teamLabel}` : link.title,
       url: link.url,
       source: 'Social ufficiale segnalato dalla famiglia',
       publishedAt: link.createdAt,
       summary: 'Annuncio pubblicato sul canale social della società e segnalato dalla famiglia.',
+      rosterPlayer: roster ? { ...roster, profileUrl: link.url, profileSource: 'Annuncio social ufficiale' } : undefined,
     }
     if (!/^https:\/\/(www\.)?instagram\.com\/(p|reel)\//i.test(link.url)) return [Promise.resolve(fallbackItem)]
     return [get(`https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(link.url)}`, { accept: 'application/json' })
-      .then((json) => instagramOembedItem(json, { team: link.team, source: 'Instagram ufficiale', url: link.url }) ?? fallbackItem)
+      .then((json) => ({ ...(instagramOembedItem(json, { team: link.team, source: 'Instagram ufficiale', url: link.url }) ?? fallbackItem), title: fallbackItem.title, rosterPlayer: fallbackItem.rosterPlayer }))
       .catch(() => fallbackItem)]
   }))
 }

@@ -16,6 +16,7 @@ import { youtubeLiveUrl } from '../src/lib/live-streams.mjs'
 import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from '../src/lib/weekend-volley.mjs'
 import { newsSourceCatalog, searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
 import { instagramOembedItem, instagramPublishedAt, instagramVolleyItems } from '../src/lib/instagram-news.mjs'
+import { encodeRosterSubmission, mergeRosterAnnouncements, parseRosterSubmission } from '../src/lib/roster-submission.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -155,6 +156,21 @@ test('include le conferme Facebook di Iole Avecone e Marlene Silva Ascensao', as
   assert.match(updater, /facebook\.com\/share\/p\/1MRFonQEqB/)
   assert.match(roster, /Iole Isabella Avecone', role: 'Schiacciatrice'/)
   assert.match(roster, /Marlene Silva Ascensao', role: 'Centrale'/)
+})
+test('un annuncio social di una nuova atleta aggiorna News e roster', async () => {
+  const encoded = encodeRosterSubmission('Anna Verdi', 'Centrale')
+  assert.deepEqual(parseRosterSubmission(encoded), { name: 'Anna Verdi', role: 'Centrale' })
+  const rosterData = [{ team: 'matese', players: [{ name: 'Chiara Lupoli', followed: true }] }]
+  const merged = mergeRosterAnnouncements(rosterData, [{ team: 'matese', rosterPlayer: { name: 'Anna Verdi', role: 'Centrale', profileUrl: 'https://facebook.com/post' } }])
+  assert.equal(merged[0].players.length, 2)
+  assert.equal(merged[0].players[1].name, 'Anna Verdi')
+  const [app, updater] = await Promise.all([
+    readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../scripts/update-news.mjs', import.meta.url), 'utf8'),
+  ])
+  assert.match(app, /Nuova atleta \/ roster/)
+  assert.match(app, /SALVA IN NEWS E ROSTER/)
+  assert.match(updater, /rosterPlayer/)
 })
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')
