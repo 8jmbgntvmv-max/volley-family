@@ -40,6 +40,8 @@ export const rosters: Roster[] = [
       { name: 'Carola Nasi', role: 'Libero', birthYear: '2001', nationality: 'Italia', profileUrl: 'https://www.instagram.com/p/DbnyDyBCF1d/', profileSource: 'Conferma ufficiale Matese' },
       { name: 'Iole Isabella Avecone', role: 'Schiacciatrice', birthDate: '17 ottobre 2000', height: 185, nationality: 'Italia', profileUrl: 'https://www.facebook.com/share/p/19aHw3rNoA/?mibextid=wwXIfr', profileSource: 'Conferma ufficiale Matese', publicProfiles: [{ label: 'Profilo pubblico Volleybox', url: 'https://women.volleybox.net/iole-isabella-avecone-p161684' }] },
       { name: 'Marlene Silva Ascensao', role: 'Centrale', birthDate: '28 ottobre 1991', height: 182, nationality: 'Italia', profileUrl: 'https://www.facebook.com/share/p/1MRFonQEqB/?mibextid=wwXIfr', profileSource: 'Conferma ufficiale Matese', publicProfiles: [{ label: 'Profilo pubblico Volleybox', url: 'https://women.volleybox.net/marlene-silva-ascensao-p52770' }] },
+      { name: 'Alessia Cirioli', role: 'Centrale', birthYear: '2006', height: 180, nationality: 'Italia', profileUrl: 'https://www.facebook.com/polisportiva.matese', profileSource: 'Roster Matese segnalato dalla famiglia', publicProfiles: [{ label: 'Profilo pubblico Volleybox', url: 'https://women.volleybox.net/it/alessia-ciroli-p304671' }] },
+      { name: 'Alessandra Moreno', role: 'Centrale', nationality: 'Italia', profileUrl: 'https://www.facebook.com/polisportiva.matese', profileSource: 'Roster Matese segnalato dalla famiglia', publicProfiles: [{ label: 'Profilo pubblico Volleybox', url: 'https://women.volleybox.net/it/alessandra-moreno-p305575' }] },
     ],
   },
   {

@@ -172,6 +172,19 @@ test('un annuncio social di una nuova atleta aggiorna News e roster', async () =
   assert.match(app, /SALVA IN NEWS E ROSTER/)
   assert.match(updater, /rosterPlayer/)
 })
+test('Alessia Cirioli e Alessandra Moreno restano due centrali distinte nel roster Matese', async () => {
+  const roster = await readFile(new URL('../src/data/rosters.ts', import.meta.url), 'utf8')
+  const mateseBlock = roster.match(/team: 'matese'[\s\S]*?\n  },/)?.[0] ?? ''
+  assert.equal((mateseBlock.match(/name: 'Alessia Cirioli'/g) ?? []).length, 1)
+  assert.equal((mateseBlock.match(/name: 'Alessandra Moreno'/g) ?? []).length, 1)
+  assert.match(mateseBlock, /name: 'Alessia Cirioli', role: 'Centrale'/)
+  assert.match(mateseBlock, /name: 'Alessandra Moreno', role: 'Centrale'/)
+  const merged = mergeRosterAnnouncements([{ team: 'matese', players: [] }], [
+    { team: 'matese', rosterPlayer: { name: 'Alessia Cirioli', role: 'Centrale' } },
+    { team: 'matese', rosterPlayer: { name: 'Alessandra Moreno', role: 'Centrale' } },
+  ])
+  assert.deepEqual(merged[0].players.map((player) => player.name), ['Alessia Cirioli', 'Alessandra Moreno'])
+})
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')
   assert.equal(classifyMatchFocus('Vittoria in rimonta nel post partita'), 'post')
