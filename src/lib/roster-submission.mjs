@@ -27,12 +27,21 @@ export function mergeRosterAnnouncements(rosters, news) {
   return rosters.map((roster) => {
     const additions = news
       .filter((item) => item.team === roster.team && item.rosterPlayer?.name)
-      .map((item) => item.rosterPlayer)
+      .flatMap((item) => {
+        const names = item.rosterPlayer.name.split(/\s+(?:e|&)\s+/i).map((name) => name.trim()).filter(Boolean)
+        return names.map((name) => ({ ...item.rosterPlayer, name }))
+      })
     const players = [...roster.players]
     for (const addition of additions) {
       const index = players.findIndex((player) => normalizeName(player.name) === normalizeName(addition.name))
       if (index < 0) players.push(addition)
-      else players[index] = { ...addition, ...players[index], role: players[index].role || addition.role }
+      else players[index] = {
+        ...addition,
+        ...players[index],
+        role: players[index].role || addition.role,
+        profileUrl: addition.profileUrl || players[index].profileUrl,
+        profileSource: addition.profileSource || players[index].profileSource,
+      }
     }
     return { ...roster, players }
   })

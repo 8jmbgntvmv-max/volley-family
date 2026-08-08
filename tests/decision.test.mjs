@@ -185,6 +185,20 @@ test('Alessia Cirioli e Alessandra Moreno restano due centrali distinte nel rost
   ])
   assert.deepEqual(merged[0].players.map((player) => player.name), ['Alessia Cirioli', 'Alessandra Moreno'])
 })
+test('un solo post con due atlete non crea una terza voce congiunta nel roster', () => {
+  const rosterData = [{ team: 'matese', players: [
+    { name: 'Alessia Cirioli', role: 'Centrale' },
+    { name: 'Alessandra Moreno', role: 'Centrale' },
+  ] }]
+  const postUrl = 'https://www.facebook.com/share/p/19N2BLKQAL/'
+  const merged = mergeRosterAnnouncements(rosterData, [{
+    team: 'matese',
+    rosterPlayer: { name: 'Alessia Cirioli e Alessandra Moreno', role: 'Centrale', profileUrl: postUrl, profileSource: 'Annuncio social ufficiale' },
+  }])
+  assert.equal(merged[0].players.length, 2)
+  assert.deepEqual(merged[0].players.map((player) => player.name), ['Alessia Cirioli', 'Alessandra Moreno'])
+  assert.ok(merged[0].players.every((player) => player.profileUrl === postUrl))
+})
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')
   assert.equal(classifyMatchFocus('Vittoria in rimonta nel post partita'), 'post')
