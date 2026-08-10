@@ -12,6 +12,7 @@ import { youtubeLiveUrl } from './lib/live-streams.mjs'
 import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from './lib/weekend-volley.mjs'
 import { newsSourceCatalog } from './lib/news-source-catalog.mjs'
 import { encodeRosterSubmission, mergeRosterAnnouncements } from './lib/roster-submission.mjs'
+import { applyRosterOverrides, hideRosterPlayer, readRosterOverrides, renameRosterPlayer, rosterOverrideKey, writeRosterOverrides, type RosterOverrides } from './lib/roster-overrides.mjs'
 import { matches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
@@ -25,6 +26,8 @@ type PlayerStats = { name: string; profileUrl?: string; appearances?: number | n
 type LeagueTeamData = { source: string; season: string; links: { results?: string; standings?: string; statistics?: string }; standing: null | { position?: number; points?: number; played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; stats: null | { played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; players?: PlayerStats[] }
 type LeagueData = { updatedAt: string | null; teams: Record<TeamId, LeagueTeamData> }
 type SelectedAthlete = { team: TeamId; player: RosterPlayer }
+type EditableRosterPlayer = RosterPlayer & { rosterKey?: string }
+type RosterView = Omit<(typeof rosters)[number], 'players'> & { players: EditableRosterPlayer[] }
 type UpdatePreferences = { news: boolean; results: boolean; matches: boolean; athletes: boolean; teams: Record<TeamId, boolean> }
 const defaultUpdatePreferences: UpdatePreferences = { news: true, results: true, matches: true, athletes: true, teams: { altino: true, matese: true, perugia: true } }
 const nav: { id: Screen; label: string; icon: string }[] = [
@@ -190,11 +193,20 @@ function WeekendVolley({ news, sourceStates, updatedAt, onOpenNews }: { news: Ne
   })}</div></section>
 }
 
-function HomeRosters({ rosterData, onSelectAthlete }: { rosterData: typeof rosters; onSelectAthlete: (athlete: SelectedAthlete) => void }) {
+function RosterEditDialog({ entry, onClose, onSave }: { entry: { team: TeamId; player: EditableRosterPlayer }; onClose: () => void; onSave: (name: string, role: string) => void }) {
+  const [name, setName] = useState(entry.player.name)
+  const [role, setRole] = useState(entry.player.role ?? '')
+  const submit = (event: FormEvent) => { event.preventDefault(); if (name.trim()) onSave(name, role) }
+  return <div className="athlete-detail-overlay roster-edit-overlay" role="dialog" aria-modal="true" aria-labelledby="roster-edit-title" onClick={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <form className="roster-edit-card" onSubmit={submit}><header><div><p className="eyebrow">Modifica roster</p><h2 id="roster-edit-title">{entry.player.name}</h2></div><button type="button" className="detail-close" onClick={onClose} aria-label="Chiudi modifica">×</button></header><label>Nome e cognome<input value={name} onChange={(event) => setName(event.target.value)} required maxLength={100} /></label><label>Ruolo<input value={role} onChange={(event) => setRole(event.target.value)} maxLength={60} placeholder="Es. Centrale" /></label><p>La modifica viene salvata solo su questo dispositivo e non cancella le prossime comunicazioni della società.</p><div className="roster-edit-actions"><button type="button" className="secondary-button" onClick={onClose}>Annulla</button><button type="submit">Salva modifiche</button></div></form>
+  </div>
+}
+
+function HomeRosters({ rosterData, onSelectAthlete, onEditAthlete, onDeleteAthlete, onResetRoster, hasOverrides }: { rosterData: RosterView[]; onSelectAthlete: (athlete: SelectedAthlete) => void; onEditAthlete: (team: TeamId, player: EditableRosterPlayer) => void; onDeleteAthlete: (team: TeamId, player: EditableRosterPlayer) => void; onResetRoster: (team: TeamId) => void; hasOverrides: (team: TeamId) => boolean }) {
   return <section className="home-dashboard" aria-labelledby="home-rosters-title"><div className="dashboard-heading"><div><p className="eyebrow">Stagione 2026/27</p><h2 id="home-rosters-title">Roster</h2></div></div><p className="dashboard-note">Sono mostrati soltanto i nomi già annunciati. Una comunicazione salvata come “Nuova atleta / roster” aggiorna automaticamente entrambe le sezioni.</p><div className="roster-grid">{rosterData.map((roster) => {
     const team = teams.find((candidate) => candidate.id === roster.team)!
     const countLabel = roster.team === 'altino' ? '13 atlete · roster presentato' : roster.status === 'complete' ? `${roster.players.length} atleti · completo` : `${roster.players.length} annunciati · in aggiornamento`
-    return <details className="roster-card" key={roster.team}><summary><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><strong>{team.shortName}</strong><small>{countLabel}</small></div><b>＋</b></summary><div className="roster-list">{roster.players.map((player) => <button className={player.followed ? 'followed' : ''} key={player.name} onClick={() => onSelectAthlete({ team: roster.team, player })}><span>{player.name}{player.followed && <i>SEGUITO</i>}</span><small>{player.role ?? 'Ruolo da pubblicare'}</small><b aria-hidden="true">›</b></button>)}</div><a className="roster-source" href={roster.sourceUrl} target="_blank" rel="noreferrer">{roster.sourceLabel}</a></details>
+    return <details className="roster-card" key={roster.team}><summary><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><strong>{team.shortName}</strong><small>{countLabel}</small></div><b>＋</b></summary><div className="roster-list">{roster.players.map((player) => <div className="roster-entry" key={player.rosterKey ?? player.name}><button className={`roster-entry-main ${player.followed ? 'followed' : ''}`} onClick={() => onSelectAthlete({ team: roster.team, player })}><span>{player.name}{player.followed && <i>SEGUITO</i>}</span><small>{player.role ?? 'Ruolo da pubblicare'}</small></button><div className="roster-entry-actions"><button type="button" onClick={() => onEditAthlete(roster.team, player)}>Modifica</button><button type="button" className="danger-button" onClick={() => onDeleteAthlete(roster.team, player)}>Elimina</button></div></div>)}</div>{hasOverrides(roster.team) && <button className="roster-reset" onClick={() => onResetRoster(roster.team)}>Ripristina roster automatico</button>}<a className="roster-source" href={roster.sourceUrl} target="_blank" rel="noreferrer">{roster.sourceLabel}</a></details>
   })}</div></section>
 }
 
@@ -425,6 +437,8 @@ function App() {
   const [results, setResults] = useState<ResultsByMatch>({})
   const [leagueData, setLeagueData] = useState<LeagueData | null>(null)
   const [selectedAthlete, setSelectedAthlete] = useState<SelectedAthlete | null>(null)
+  const [rosterOverrides, setRosterOverrides] = useState<RosterOverrides>(() => readRosterOverrides())
+  const [editingRosterAthlete, setEditingRosterAthlete] = useState<{ team: TeamId; player: EditableRosterPlayer } | null>(null)
   const [dataReady, setDataReady] = useState(false)
   const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'locked'>('checking')
   const [inviteError, setInviteError] = useState(false)
@@ -437,7 +451,7 @@ function App() {
   })
   const boardClient = useMemo(() => createFamilyBoardClient({ url: import.meta.env.VITE_SUPABASE_URL, anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY }), [])
   const weekends = useMemo(() => groupByWeekend(matches), [])
-  const liveRosters = useMemo(() => mergeRosterAnnouncements(rosters, news), [news])
+  const liveRosters = useMemo(() => applyRosterOverrides(mergeRosterAnnouncements(rosters, news), rosterOverrides), [news, rosterOverrides])
   const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
   const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
   const todayUpdates = useMemo(() => todaysUpdateItems(visibleUpdates), [visibleUpdates])
@@ -504,6 +518,26 @@ function App() {
     } finally {
       setNewsSocialSubmitting(false)
     }
+  }
+
+  const saveRosterOverrides = (next: RosterOverrides) => { setRosterOverrides(next); writeRosterOverrides(next) }
+  const editRosterAthlete = (team: TeamId, player: EditableRosterPlayer) => setEditingRosterAthlete({ team, player })
+  const saveRosterAthlete = (name: string, role: string) => {
+    if (!editingRosterAthlete) return
+    const originalName = editingRosterAthlete.player.rosterKey ?? rosterOverrideKey(editingRosterAthlete.player)
+    saveRosterOverrides(renameRosterPlayer(rosterOverrides, editingRosterAthlete.team, originalName, name, role))
+    setEditingRosterAthlete(null)
+  }
+  const deleteRosterAthlete = (team: TeamId, player: EditableRosterPlayer) => {
+    if (!window.confirm(`Eliminare ${player.name} dal roster su questo dispositivo?`)) return
+    saveRosterOverrides(hideRosterPlayer(rosterOverrides, team, player.rosterKey ?? rosterOverrideKey(player)))
+  }
+  const resetRoster = (team: TeamId) => {
+    if (!window.confirm('Ripristinare il roster automatico di questa squadra?')) return
+    const next: RosterOverrides = { ...rosterOverrides, hidden: { ...rosterOverrides.hidden }, renamed: { ...rosterOverrides.renamed } }
+    delete next.hidden[team]
+    delete next.renamed[team]
+    saveRosterOverrides(next)
   }
 
   useEffect(() => {
@@ -590,7 +624,7 @@ function App() {
         <HomeFamilyBoard onOpen={() => setScreen('board')} />
         <HomeLiveStreams />
         <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
-        <HomeRosters rosterData={liveRosters} onSelectAthlete={setSelectedAthlete} />
+        <HomeRosters rosterData={liveRosters} onSelectAthlete={setSelectedAthlete} onEditAthlete={editRosterAthlete} onDeleteAthlete={deleteRosterAthlete} onResetRoster={resetRoster} hasOverrides={(team) => Boolean(rosterOverrides.hidden?.[team]?.length || Object.keys(rosterOverrides.renamed?.[team] ?? {}).length)} />
         <HomeResultsAndStandings results={results} leagueData={leagueData} />
         <HomeStatistics results={results} leagueData={leagueData} />
         <section className="section-block"><div className="section-title"><div><p className="eyebrow">Le tue squadre</p><h2>Tre campionati, un’unica agenda</h2></div><button className="text-button" onClick={() => setScreen('teams')}>Vedi tutte</button></div>
@@ -605,6 +639,7 @@ function App() {
       {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} />}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}
     </main>
+    {editingRosterAthlete && <RosterEditDialog entry={editingRosterAthlete} onClose={() => setEditingRosterAthlete(null)} onSave={saveRosterAthlete} />}
     {selectedAthlete && <AthleteDetail selected={selectedAthlete} news={news} leagueData={leagueData} onClose={() => setSelectedAthlete(null)} />}
     <nav className="bottom-nav" aria-label="Navigazione principale">{nav.map((item) => <button key={item.id} className={screen === item.id ? 'active' : ''} onClick={() => setScreen(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav>
   </div>

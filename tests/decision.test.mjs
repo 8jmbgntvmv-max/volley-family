@@ -17,6 +17,7 @@ import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from '../s
 import { newsSourceCatalog, searchableSourceGroups } from '../src/lib/news-source-catalog.mjs'
 import { instagramOembedItem, instagramPublishedAt, instagramVolleyItems } from '../src/lib/instagram-news.mjs'
 import { encodeRosterSubmission, mergeRosterAnnouncements, parseRosterSubmission } from '../src/lib/roster-submission.mjs'
+import { applyRosterOverrides, emptyRosterOverrides, hideRosterPlayer, renameRosterPlayer } from '../src/lib/roster-overrides.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -198,6 +199,13 @@ test('un solo post con due atlete non crea una terza voce congiunta nel roster',
   assert.equal(merged[0].players.length, 2)
   assert.deepEqual(merged[0].players.map((player) => player.name), ['Alessia Cirioli', 'Alessandra Moreno'])
   assert.ok(merged[0].players.every((player) => player.profileUrl === postUrl))
+})
+test('il roster supporta modifica e cancellazione locali reversibili', () => {
+  const base = [{ team: 'matese', players: [{ name: 'Atleta Originale', role: 'Centrale' }] }]
+  const renamed = renameRosterPlayer(emptyRosterOverrides(), 'matese', 'Atleta Originale', 'Atleta Modificata', 'Libero')
+  assert.deepEqual(applyRosterOverrides(base, renamed)[0].players.map((player) => ({ name: player.name, role: player.role })), [{ name: 'Atleta Modificata', role: 'Libero' }])
+  const hidden = hideRosterPlayer(renamed, 'matese', 'Atleta Originale')
+  assert.deepEqual(applyRosterOverrides(base, hidden)[0].players, [])
 })
 test('distingue pre-partita, post-partita e indisponibilità senza inferenze', () => {
   assert.equal(classifyMatchFocus('Coach presenta la gara in vista del derby'), 'pre')
