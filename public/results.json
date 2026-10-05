@@ -1,7 +1,11 @@
 {
-  "updatedAt": "2026-08-04T13:04:50.201Z",
-  "source": "https://pub-8394085fb0ca451eaa42bc05b01c416f.r2.dev/public/json/2026/B2/F/H/calendario.json",
-  "championship": "Serie B2 Femminile · Girone H",
+  "updatedAt": "2026-10-05T06:05:55.804Z",
+  "source": [
+    "https://pub-8394085fb0ca451eaa42bc05b01c416f.r2.dev/public/json/2026/B2/F/H/calendario.json",
+    "https://www.legavolleyfemminile.it/club/tenaglia-altino-avastese-volley/710969/risultati/",
+    "https://www.legavolley.it/risultati/?Anno=2026&IdCampionato=999"
+  ],
+  "championship": "Risultati ufficiali · Lega Volley Femminile A2, Lega Pallavolo Serie A e FIPAV nazionale",
   "items": [
     {
       "matchNumber": "11404",
@@ -10,7 +14,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:36.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:07:02.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11411",
@@ -19,7 +24,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:37.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:37.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11418",
@@ -28,7 +34,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:37.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:57.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11424",
@@ -37,7 +44,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:38.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:38.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11432",
@@ -46,7 +54,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:38.0000000Z"
+      "sourceUpdatedAt": "2026-08-31T09:12:08.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11438",
@@ -55,7 +64,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:39.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:39.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11448",
@@ -64,7 +74,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:39.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:52.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11454",
@@ -73,7 +84,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:40.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:39.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11462",
@@ -82,7 +94,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:40.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:42.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11468",
@@ -91,7 +104,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:40.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:40.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11477",
@@ -100,7 +114,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:41.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:28:09.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11480",
@@ -109,7 +124,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:41.0000000Z"
+      "sourceUpdatedAt": "2026-09-09T06:40:51.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11487",
@@ -118,7 +134,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:42.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:50.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11495",
@@ -127,7 +144,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:42.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:07:05.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11502",
@@ -136,7 +154,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:43.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:43.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11509",
@@ -145,7 +164,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:43.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:07:01.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11515",
@@ -154,7 +174,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:44.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:44.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11523",
@@ -163,7 +184,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:44.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:44.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11529",
@@ -172,7 +194,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:44.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:44.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11539",
@@ -181,7 +204,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:45.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:56.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11545",
@@ -190,7 +214,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:45.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:37.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11553",
@@ -199,7 +224,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:46.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:06:46.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11559",
@@ -208,7 +234,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:46.0000000Z"
+      "sourceUpdatedAt": "2026-07-30T15:42:46.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11568",
@@ -217,7 +244,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:47.0000000Z"
+      "sourceUpdatedAt": "2026-08-27T12:28:12.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11571",
@@ -226,7 +254,8 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:47.0000000Z"
+      "sourceUpdatedAt": "2026-09-15T05:43:37.0000000Z",
+      "team": "matese"
     },
     {
       "matchNumber": "11578",
@@ -235,7 +264,567 @@
       "firstTeamSets": 0,
       "secondTeamSets": 0,
       "sets": [],
-      "sourceUpdatedAt": "2026-07-30T15:42:48.0000000Z"
+      "sourceUpdatedAt": "2026-09-15T05:48:35.0000000Z",
+      "team": "matese"
+    },
+    {
+      "matchNumber": "3207",
+      "team": "altino",
+      "date": "2026-10-04",
+      "opponent": "Wash4Green Monviso Volley",
+      "home": true,
+      "played": true,
+      "official": true,
+      "firstTeamSets": 0,
+      "secondTeamSets": 3,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3215",
+      "team": "altino",
+      "date": "2026-10-10",
+      "opponent": "Caldaie Melgari VBC Cremonese",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3224",
+      "team": "altino",
+      "date": "2026-10-14",
+      "opponent": "Bartoccini +energia Perugia",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3228",
+      "team": "altino",
+      "date": "2026-10-18",
+      "opponent": "Sigel Seap Marsala Volley",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3241",
+      "team": "altino",
+      "date": "2026-10-25",
+      "opponent": "Ferraro SMI Roma Volley",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3247",
+      "team": "altino",
+      "date": "2026-11-01",
+      "opponent": "C.B.L. Costa Volpino",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3257",
+      "team": "altino",
+      "date": "2026-11-07",
+      "opponent": "Erreci Busto Arsizio",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3267",
+      "team": "altino",
+      "date": "2026-11-15",
+      "opponent": "Panbiscò Leonessa Altamura",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3278",
+      "team": "altino",
+      "date": "2026-11-18",
+      "opponent": "Cosedil F3 Motors Akademia Messina",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3287",
+      "team": "altino",
+      "date": "2026-11-24",
+      "opponent": "Nuvolì Altafratte Padova",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3307",
+      "team": "altino",
+      "date": "2026-12-06",
+      "opponent": "Trasporti Bressan Offanengo",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3316",
+      "team": "altino",
+      "date": "2026-12-13",
+      "opponent": "Clai Imola Volley",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3322",
+      "team": "altino",
+      "date": "2026-12-16",
+      "opponent": "Club Italia",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3334",
+      "team": "altino",
+      "date": "2026-12-20",
+      "opponent": "Itas Trentino",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3343",
+      "team": "altino",
+      "date": "2026-12-27",
+      "opponent": "Olio Pantaleo Volley Fasano",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3352",
+      "team": "altino",
+      "date": "2027-01-06",
+      "opponent": "Narconon Volley Melendugno",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3360",
+      "team": "altino",
+      "date": "2027-01-09",
+      "opponent": "Wash4Green Monviso Volley",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3368",
+      "team": "altino",
+      "date": "2027-01-16",
+      "opponent": "Caldaie Melgari VBC Cremonese",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3377",
+      "team": "altino",
+      "date": "2027-01-20",
+      "opponent": "Bartoccini +energia Perugia",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3381",
+      "team": "altino",
+      "date": "2027-01-24",
+      "opponent": "Sigel Seap Marsala Volley",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3394",
+      "team": "altino",
+      "date": "2027-01-31",
+      "opponent": "Ferraro SMI Roma Volley",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3400",
+      "team": "altino",
+      "date": "2027-02-03",
+      "opponent": "C.B.L. Costa Volpino",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3410",
+      "team": "altino",
+      "date": "2027-02-07",
+      "opponent": "Erreci Busto Arsizio",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3420",
+      "team": "altino",
+      "date": "2027-02-14",
+      "opponent": "Panbiscò Leonessa Altamura",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3431",
+      "team": "altino",
+      "date": "2027-02-21",
+      "opponent": "Cosedil F3 Motors Akademia Messina",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3440",
+      "team": "altino",
+      "date": "2027-02-27",
+      "opponent": "Nuvolì Altafratte Padova",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3460",
+      "team": "altino",
+      "date": "2027-03-07",
+      "opponent": "Trasporti Bressan Offanengo",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3469",
+      "team": "altino",
+      "date": "2027-03-14",
+      "opponent": "Clai Imola Volley",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3475",
+      "team": "altino",
+      "date": "2027-03-21",
+      "opponent": "Club Italia",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3487",
+      "team": "altino",
+      "date": "2027-03-28",
+      "opponent": "Itas Trentino",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3496",
+      "team": "altino",
+      "date": "2027-04-04",
+      "opponent": "Olio Pantaleo Volley Fasano",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "3505",
+      "team": "altino",
+      "date": "2027-04-11",
+      "opponent": "Narconon Volley Melendugno",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-10-18:acqua sant anna cuneo",
+      "team": "perugia",
+      "date": "2026-10-18",
+      "opponent": "Acqua Sant'Anna Cuneo",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-10-25:tinet prata di pordenone",
+      "team": "perugia",
+      "date": "2026-10-25",
+      "opponent": "Tinet Prata di Pordenone",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-11-01:vero volley monza",
+      "team": "perugia",
+      "date": "2026-11-01",
+      "opponent": "Vero Volley Monza",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-11-04:cisterna volley",
+      "team": "perugia",
+      "date": "2026-11-04",
+      "opponent": "Cisterna Volley",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-11-08:itas trentino",
+      "team": "perugia",
+      "date": "2026-11-08",
+      "opponent": "Itas Trentino",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-11-22:gas sales bluenergy piacenza",
+      "team": "perugia",
+      "date": "2026-11-22",
+      "opponent": "Gas Sales Bluenergy Piacenza",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-11-29:valsa group modena",
+      "team": "perugia",
+      "date": "2026-11-29",
+      "opponent": "Valsa Group Modena",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-12-02:allianz milano",
+      "team": "perugia",
+      "date": "2026-12-02",
+      "opponent": "Allianz Milano",
+      "home": false,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-12-06:rana verona",
+      "team": "perugia",
+      "date": "2026-12-06",
+      "opponent": "Rana Verona",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-12-13:cucine lube civitanova",
+      "team": "perugia",
+      "date": "2026-12-13",
+      "opponent": "Cucine Lube Civitanova",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
+    },
+    {
+      "matchNumber": "perugia:2026-12-20:pallavolo padova",
+      "team": "perugia",
+      "date": "2026-12-20",
+      "opponent": "Pallavolo Padova",
+      "home": true,
+      "played": false,
+      "official": false,
+      "firstTeamSets": 0,
+      "secondTeamSets": 0,
+      "sets": [],
+      "sourceUpdatedAt": "2026-10-05T06:05:55.804Z"
     }
   ]
 }

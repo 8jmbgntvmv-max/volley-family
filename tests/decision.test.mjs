@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { groupByWeekend } from '../src/lib/decision.mjs'
 import { extractMateseResults } from '../src/lib/fipav-results.mjs'
+import { parseLegaAResults, parseLfvResults } from '../src/lib/league-results.mjs'
 import { articleImageFromHtml } from '../src/lib/news-image.mjs'
 import { mergeNewsItems } from '../src/lib/news-items.mjs'
 import { googleMapsDirectionsUrl } from '../src/lib/maps.mjs'
@@ -43,15 +44,29 @@ test('estrae il risultato ufficiale Matese dal formato FIPAV', () => {
   assert.equal(items.length, 26)
   assert.deepEqual(items[0], { matchNumber: '11404', played: true, official: true, firstTeamSets: 1, secondTeamSets: 3, sets: [{ first: 25, second: 22 }, { first: 20, second: 25 }, { first: 18, second: 25 }, { first: 19, second: 25 }], sourceUpdatedAt: '2026-10-17T20:00:00Z' })
 })
+test('estrae il risultato ufficiale Altino dalla pagina Lega Volley Femminile', () => {
+  const html = '<table class="table risultati"><thead><tr><th>#3207</th><th>04/10/2026</th></tr></thead><tbody><tr><th class="num">0</th><td><a>Tenaglia Altino Avastese Volley</a></td></tr><tr><th class="num">3</th><td><a>Wash4Green Monviso Volley</a></td></tr></tbody></table>'
+  assert.deepEqual(parseLfvResults(html, '2026-10-05T00:00:00Z'), [{ matchNumber: '3207', team: 'altino', date: '2026-10-04', opponent: 'Wash4Green Monviso Volley', home: true, played: true, official: true, firstTeamSets: 0, secondTeamSets: 3, sets: [], sourceUpdatedAt: '2026-10-05T00:00:00Z' }])
+})
+test('predispone il recupero risultati A1 anche prima dell’inizio di Perugia', () => {
+  const html = '<select id="Giornata"><option selected value=8485>1ª Giornata (18/10/2026)</option></select><table id="GareGiornata"><tr class="EvenRow"><td class="risultati-nomesq">Acqua Sant’Anna Cuneo</td><td align="center">0-0</td><td>&nbsp;</td></tr><tr class="EvenRow"><td class="risultati-nomesq">Sir Susa Scai Perugia</td><td>&nbsp;</td></tr></table>'
+  assert.deepEqual(parseLegaAResults(html, '2026-10-05T00:00:00Z')[0], { matchNumber: 'perugia:2026-10-18:acqua sant anna cuneo', team: 'perugia', date: '2026-10-18', opponent: "Acqua Sant’Anna Cuneo", home: false, played: false, official: false, firstTeamSets: 0, secondTeamSets: 0, sets: [], sourceUpdatedAt: '2026-10-05T00:00:00Z' })
+})
 test('collega risultati e aggiornamento periodico alla pubblicazione', async () => {
-  const [app, workflow, packageJson] = await Promise.all([
+  const [app, workflow, resultsWorkflow, packageJson, updater] = await Promise.all([
     readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../.github/workflows/deploy.yml', import.meta.url), 'utf8'),
+    readFile(new URL('../.github/workflows/refresh-results.yml', import.meta.url), 'utf8'),
     readFile(new URL('../package.json', import.meta.url), 'utf8'),
+    readFile(new URL('../scripts/update-results.mjs', import.meta.url), 'utf8'),
   ])
   assert.match(app, /results\.json/)
   assert.match(workflow, /npm run results:update/)
+  assert.match(resultsWorkflow, /npm run results:update/)
+  assert.match(resultsWorkflow, /contents: write/)
   assert.match(packageJson, /"results:update"/)
+  assert.match(updater, /legavolleyfemminile\.it/)
+  assert.match(updater, /legavolley\.it/)
 })
 test('apre le indicazioni con un URL universale Google Maps', () => {
   const url = googleMapsDirectionsUrl('Palamatese, Piedimonte Matese')

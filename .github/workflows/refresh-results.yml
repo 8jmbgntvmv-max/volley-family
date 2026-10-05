@@ -1,0 +1,39 @@
+name: Aggiorna risultati Volley Family
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-results
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Recupera risultati ufficiali
+        run: npm run results:update
+      - name: Pubblica solo se i risultati sono cambiati
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- public/results.json; then
+            echo "Nessun nuovo risultato ufficiale."
+            exit 0
+          fi
+          git add public/results.json
+          git commit -m "Aggiorna risultati ufficiali"
+          git push

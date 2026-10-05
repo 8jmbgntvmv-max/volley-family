@@ -1,6 +1,7 @@
 import { classifyMatchFocus } from './news-focus.mjs'
 
 const followedNames = ['chiara lupoli', 'camilla lupoli', 'luca loreti']
+const normalize = (value = '') => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('it').replace(/[^a-z0-9]+/g, ' ').trim()
 
 export function buildUpdateItems(news = [], results = {}, matches = []) {
   const newsItems = news.map((item) => {
@@ -22,6 +23,7 @@ export function buildUpdateItems(news = [], results = {}, matches = []) {
   const resultItems = Object.values(results).flatMap((result) => {
     if (!result?.played) return []
     const match = matches.find((candidate) => candidate.matchNumber === result.matchNumber)
+      ?? matches.find((candidate) => result.team === candidate.team && result.date === candidate.date && normalize(result.opponent) === normalize(candidate.opponent))
     if (!match) return []
     const first = match.home ? match.team : match.opponent
     const second = match.home ? match.opponent : match.team
