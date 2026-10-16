@@ -1,46 +1,92 @@
 {
-  "updatedAt": "2026-08-04T13:04:45.144Z",
+  "updatedAt": "2026-10-16T11:13:17.372Z",
   "teams": {
     "altino": {
-      "source": "Lega Volley Femminile",
+      "source": "Federazione Italiana Pallavolo",
       "season": "2026/27",
       "links": {
-        "results": "https://www.legavolleyfemminile.it/club/tenaglia-altino-avastese-volley/710969/risultati/",
-        "standings": "https://www.legavolleyfemminile.it/classifica/?campionato=710340&stagione=2026",
-        "statistics": "https://www.legavolleyfemminile.it/club/tenaglia-altino-avastese-volley/710969/stats/?stagione=2026&tipocomp=RS"
+        "results": "https://www.federvolley.it/campionati/serie-a-b#home/2026/A2/F/U",
+        "standings": "https://www.federvolley.it/campionati/serie-a-b#home/2026/A2/F/U",
+        "statistics": "https://www.federvolley.it/campionati/serie-a-b#home/2026/A2/F/U"
       },
-      "standing": null,
+      "standing": {
+        "position": 17,
+        "points": 0,
+        "played": 3,
+        "wins": 0,
+        "losses": 3,
+        "setsWon": 0,
+        "setsLost": 9,
+        "pointsWon": 177,
+        "pointsLost": 226
+      },
+      "stats": {
+        "played": 3,
+        "wins": 0,
+        "losses": 3,
+        "setsWon": 0,
+        "setsLost": 9
+      },
+      "players": [],
+      "competition": "Serie A2 Femminile"
+    },
+    "perugia": {
+      "source": "Federazione Italiana Pallavolo",
+      "season": "2026/27",
+      "links": {
+        "results": "https://www.federvolley.it/campionati/serie-a-b#home/2026/A1/M/U",
+        "standings": "https://www.federvolley.it/campionati/serie-a-b#home/2026/A1/M/U",
+        "statistics": "https://www.federvolley.it/campionati/serie-a-b#home/2026/A1/M/U"
+      },
+      "standing": {
+        "position": 9,
+        "points": 0,
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      },
       "stats": {
         "played": 0,
         "wins": 0,
         "losses": 0,
-        "setsPlayed": null,
-        "setsWon": null,
-        "setsLost": null
+        "setsWon": 0,
+        "setsLost": 0
       },
-      "players": []
-    },
-    "perugia": {
-      "source": "Lega Pallavolo Serie A",
-      "season": "2026/27",
-      "links": {
-        "results": "https://www.legavolley.it/risultati/?IdCampionato=999",
-        "standings": "https://www.legavolley.it/classifica/?IdCampionato=999",
-        "statistics": "https://www.legavolley.it/statistiche/?TipoStat=1.1&Squadra=BASTIA&AnnoInizio=2026"
-      },
-      "standing": null,
-      "stats": null,
-      "players": []
+      "players": [],
+      "competition": "Serie A1 Maschile"
     },
     "matese": {
-      "source": "FIPAV nazionale",
+      "source": "Federazione Italiana Pallavolo",
       "season": "2026/27",
       "links": {
-        "results": "https://www.federvolley.it/serie-b2-femminile-calendario"
+        "results": "https://www.federvolley.it/campionati/serie-a-b#home/2026/B2/F/H",
+        "standings": "https://www.federvolley.it/campionati/serie-a-b#home/2026/B2/F/H",
+        "statistics": "https://www.federvolley.it/campionati/serie-a-b#home/2026/B2/F/H"
       },
-      "standing": null,
-      "stats": null,
-      "players": []
+      "standing": {
+        "position": 7,
+        "points": 0,
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      },
+      "stats": {
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "setsWon": 0,
+        "setsLost": 0
+      },
+      "players": [],
+      "competition": "Serie B2 Femminile · Girone H"
     }
   }
 }

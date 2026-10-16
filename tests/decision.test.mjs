@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { groupByWeekend } from '../src/lib/decision.mjs'
 import { extractMateseResults } from '../src/lib/fipav-results.mjs'
+import { FIPAV_COMPETITIONS, parseFipavCalendar, parseFipavStandings, publicFixture, resultFromFipavMatch } from '../src/lib/fipav-season.mjs'
 import { parseLegaAResults, parseLfvResults } from '../src/lib/league-results.mjs'
 import { articleImageFromHtml } from '../src/lib/news-image.mjs'
 import { mergeNewsItems } from '../src/lib/news-items.mjs'
@@ -20,6 +21,23 @@ import { instagramOembedItem, instagramPublishedAt, instagramVolleyItems } from 
 import { encodeRosterSubmission, mergeRosterAnnouncements, parseRosterSubmission } from '../src/lib/roster-submission.mjs'
 import { applyRosterOverrides, emptyRosterOverrides, hideRosterPlayer, renameRosterPlayer } from '../src/lib/roster-overrides.mjs'
 test('raggruppa le gare della stessa settimana', () => { const groups = groupByWeekend([{ date: '2026-10-24' }, { date: '2026-10-25' }, { date: '2026-11-01' }]); assert.equal(groups.length, 2); assert.equal(groups[0].matches.length, 2) })
+test('usa le competizioni FIPAV corrette per Altino, Matese e Perugia', () => {
+  assert.deepEqual(Object.fromEntries(Object.entries(FIPAV_COMPETITIONS).map(([team, value]) => [team, [value.serie, value.sesso, value.girone, value.teamCode]])), {
+    altino: ['A2', 'F', 'U', '10929'], matese: ['B2', 'F', 'H', '10387'], perugia: ['A1', 'M', 'U', '7290'],
+  })
+})
+test('converte calendario e classifica FIPAV in dati collegati alla squadra giusta', () => {
+  const config = FIPAV_COMPETITIONS.matese
+  const matches = Array.from({ length: 26 }, (_, index) => ({ ng: String(100 + index), date: '24/10/2026', time: '18.00', played: index === 0, ris_ufficiale: index === 0 ? '1' : '0', 'team1-setwin': 3, 'team2-setwin': 1, pt_a: [25, 25, 20, 25], pt_b: [20, 22, 25, 18], team1: { code: '10387', name: 'FAAM MATESE CE' }, team2: { code: '10920', name: 'FARMACIE CARBONE PRIVERNO LT' } }))
+  const selected = parseFipavCalendar({ data: { matches } }, 'matese', config)
+  assert.equal(selected.length, 26)
+  assert.equal(selected[0].home, true)
+  assert.equal(selected[0].opponent, 'FARMACIE CARBONE PRIVERNO LT')
+  assert.deepEqual(resultFromFipavMatch(selected[0]).sets[0], { first: 25, second: 20 })
+  assert.equal(publicFixture(selected[0])._source, undefined)
+  const standing = parseFipavStandings({ data: { teams: [{ position: 7, points: 12, played: 5, won: 4, lost: 1, sets_won: 13, sets_lost: 6, team: { code: '10387' } }] } }, 'matese', config)
+  assert.deepEqual(standing, { position: 7, points: 12, played: 5, wins: 4, losses: 1, setsWon: 13, setsLost: 6, pointsWon: 0, pointsLost: 0 })
+})
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
 test('recupera l’immagine principale dagli articoli Altino', () => {
@@ -65,8 +83,8 @@ test('collega risultati e aggiornamento periodico alla pubblicazione', async () 
   assert.match(resultsWorkflow, /npm run results:update/)
   assert.match(resultsWorkflow, /contents: write/)
   assert.match(packageJson, /"results:update"/)
-  assert.match(updater, /legavolleyfemminile\.it/)
-  assert.match(updater, /legavolley\.it/)
+  assert.match(updater, /FIPAV_COMPETITIONS/)
+  assert.match(updater, /schedule\.json/)
 })
 test('apre le indicazioni con un URL universale Google Maps', () => {
   const url = googleMapsDirectionsUrl('Palamatese, Piedimonte Matese')
@@ -246,8 +264,9 @@ test('aggiorna periodicamente i dati dalle Leghe ufficiali A1 e A2', async () =>
   ])
   assert.match(workflow, /npm run league:update/)
   assert.match(packageJson, /"league:update"/)
-  assert.match(leagueData, /legavolleyfemminile\.it/)
-  assert.match(leagueData, /legavolley\.it/)
+  assert.match(leagueData, /A2\/F\/U/)
+  assert.match(leagueData, /B2\/F\/H/)
+  assert.match(leagueData, /A1\/M\/U/)
   assert.match(leagueData, /federvolley\.it/)
 })
 test('completa il roster Altino e rende apribile ogni atleta', async () => {

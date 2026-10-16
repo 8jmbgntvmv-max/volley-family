@@ -26,14 +26,14 @@ jobs:
       - run: npm ci
       - name: Recupera risultati ufficiali
         run: npm run results:update
-      - name: Pubblica solo se i risultati sono cambiati
+      - name: Pubblica calendario e risultati se sono cambiati
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- public/results.json; then
-            echo "Nessun nuovo risultato ufficiale."
+          if git diff --quiet -- public/results.json public/schedule.json; then
+            echo "Nessun aggiornamento ufficiale a calendario o risultati."
             exit 0
           fi
-          git add public/results.json
-          git commit -m "Aggiorna risultati ufficiali"
+          git add public/results.json public/schedule.json
+          git commit -m "Aggiorna calendari e risultati FIPAV"
           git push

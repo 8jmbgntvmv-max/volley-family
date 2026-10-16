@@ -1,63 +1,66 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import { extractMateseResults } from '../src/lib/fipav-results.mjs'
-import { legaAGiornataUrls, parseLegaAResults, parseLfvResults } from '../src/lib/league-results.mjs'
+import { FIPAV_COMPETITIONS, parseFipavCalendar, publicFixture, resultFromFipavMatch } from '../src/lib/fipav-season.mjs'
 
-const FIPAV_URL = 'https://pub-8394085fb0ca451eaa42bc05b01c416f.r2.dev/public/json/2026/B2/F/H/calendario.json'
-const ALTINO_URL = 'https://www.legavolleyfemminile.it/club/tenaglia-altino-avastese-volley/710969/risultati/'
-const PERUGIA_URL = 'https://www.legavolley.it/risultati/?Anno=2026&IdCampionato=999'
 const LIVE_RESULTS_URL = 'https://8jmbgntvmv-max.github.io/volley-family/results.json'
-const outputUrl = new URL('../public/results.json', import.meta.url)
+const resultsUrl = new URL('../public/results.json', import.meta.url)
+const scheduleUrl = new URL('../public/schedule.json', import.meta.url)
+const sourceUrl = ({ serie, sesso, girone }) => `https://media.myvolley.net/public/json/2026/${serie}/${sesso}/${girone}/calendario.json`
 
-async function get(url) {
-  const response = await fetch(url, { headers: { 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)' } })
+async function getJson(url) {
+  const response = await fetch(url, { cache: 'no-store', headers: { 'user-agent': 'VolleyFamily/1.0 (+https://github.com/8jmbgntvmv-max/volley-family)' } })
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`)
-  return response
+  return response.json()
 }
 
-async function getJson(url) { return (await get(url)).json() }
-async function getText(url) { return (await get(url)).text() }
-
-const localFallback = JSON.parse(await readFile(outputUrl, 'utf8'))
-let fallback = localFallback
+const localResults = JSON.parse(await readFile(resultsUrl, 'utf8'))
+let fallbackResults = localResults
 try {
   const published = await getJson(LIVE_RESULTS_URL)
-  if (Array.isArray(published.items) && published.items.length >= (localFallback.items?.length ?? 0)) fallback = published
+  if (Array.isArray(published.items) && published.items.length >= (localResults.items?.length ?? 0)) fallbackResults = published
 } catch {
-  // La prima pubblicazione o un problema di rete non devono cancellare il fallback locale.
+  // Un errore remoto non deve cancellare l'ultimo risultato noto.
 }
+let fallbackSchedule = null
+try { fallbackSchedule = JSON.parse(await readFile(scheduleUrl, 'utf8')) } catch { /* Prima generazione del calendario dinamico. */ }
 
 const checkedAt = new Date().toISOString()
-const sourceTasks = [
-  (async () => ({ team: 'matese', items: extractMateseResults(await getJson(FIPAV_URL)).map((item) => ({ ...item, team: 'matese' })), source: FIPAV_URL }))(),
-  (async () => {
-    const items = parseLfvResults(await getText(ALTINO_URL), checkedAt)
-    if (items.length < 20) throw new Error(`Calendario Altino incompleto: ${items.length} gare`)
-    return { team: 'altino', items, source: ALTINO_URL }
-  })(),
-  (async () => {
-    const indexHtml = await getText(PERUGIA_URL)
-    const urls = legaAGiornataUrls(indexHtml, PERUGIA_URL)
-    const pages = await Promise.all(urls.map((url) => getText(url)))
-    const items = pages.flatMap((html) => parseLegaAResults(html, checkedAt))
-    if (items.length < 11) throw new Error(`Calendario Perugia incompleto: ${items.length} gare`)
-    return { team: 'perugia', items, source: PERUGIA_URL }
-  })(),
+const fetches = await Promise.allSettled(Object.entries(FIPAV_COMPETITIONS).map(async ([team, config]) => {
+  const url = sourceUrl(config)
+  const calendar = parseFipavCalendar(await getJson(url), team, config)
+  return { team, url: config.url, items: calendar, matches: calendar.map(resultFromFipavMatch) }
+}))
+const successful = fetches.filter((result) => result.status === 'fulfilled').map((result) => result.value)
+const failed = fetches.filter((result) => result.status === 'rejected')
+const failedTeams = new Set(failed.map((result) => Object.keys(FIPAV_COMPETITIONS)[fetches.findIndex((entry) => entry === result)]))
+
+const keepFallbackTeams = (items = []) => items.filter((item) => failedTeams.has(item.team ?? 'matese')).map((item) => ({ ...item, team: item.team ?? 'matese' }))
+const resultItems = [
+  ...successful.flatMap((result) => result.matches),
+  ...keepFallbackTeams(fallbackResults.items),
 ]
-const fetched = await Promise.allSettled(sourceTasks)
-const successful = fetched.filter((result) => result.status === 'fulfilled').map((result) => result.value)
-const failed = fetched.filter((result) => result.status === 'rejected')
-const items = [...new Map([
-  ...successful.flatMap((result) => result.items.map((item) => [item.matchNumber, item])),
-  ...(failed.length ? (fallback.items ?? []).map((item) => [item.matchNumber, { team: item.team ?? 'matese', ...item }]) : []),
-]).values()]
+const scheduleItems = successful.flatMap((result) => result.items.map(publicFixture))
+const priorScheduleItems = fallbackSchedule?.items ?? []
+const completeSchedule = successful.length === Object.keys(FIPAV_COMPETITIONS).length ? scheduleItems : [
+  ...scheduleItems,
+  ...priorScheduleItems.filter((item) => failedTeams.has(item.team)),
+]
+
+const unique = (items) => [...new Map(items.map((item) => [`${item.team}:${item.matchNumber}`, item])).values()]
+const canonicalResults = unique(resultItems)
 const fingerprint = (values) => JSON.stringify(values.map(({ sourceUpdatedAt: _sourceUpdatedAt, ...item }) => item))
-const changed = fingerprint(items) !== fingerprint(fallback.items ?? [])
-const data = {
-  updatedAt: changed ? checkedAt : fallback.updatedAt,
-  source: successful.map((result) => result.source),
-  championship: 'Risultati ufficiali · Lega Volley Femminile A2, Lega Pallavolo Serie A e FIPAV nazionale',
-  items: changed ? items : fallback.items,
+const resultsChanged = fingerprint(canonicalResults) !== fingerprint(fallbackResults.items ?? [])
+const resultsData = {
+  updatedAt: resultsChanged ? checkedAt : fallbackResults.updatedAt,
+  source: successful.map((result) => result.url),
+  championship: 'Federazione Italiana Pallavolo · A2 femminile, B2 femminile girone H, A1 maschile',
+  items: resultsChanged ? canonicalResults : fallbackResults.items,
 }
-await writeFile(outputUrl, `${JSON.stringify(data, null, 2)}\n`)
-console.log(`Risultati aggiornati: Altino ${items.filter((item) => item.team === 'altino' && item.played).length}, Matese ${items.filter((item) => (item.team ?? 'matese') === 'matese' && item.played).length}, Perugia ${items.filter((item) => item.team === 'perugia' && item.played).length}`)
-if (failed.length) console.warn(`Fonti risultati non disponibili: ${failed.length}; conservati i dati precedenti.`, failed.map((result) => result.reason?.message ?? 'errore'))
+await writeFile(resultsUrl, `${JSON.stringify(resultsData, null, 2)}\n`)
+
+const scheduleChanged = JSON.stringify(completeSchedule) !== JSON.stringify(priorScheduleItems)
+if (completeSchedule.length && scheduleChanged) {
+  await writeFile(scheduleUrl, `${JSON.stringify({ updatedAt: checkedAt, source: successful.map((result) => result.url), items: completeSchedule }, null, 2)}\n`)
+}
+
+console.log(`Dati FIPAV acquisiti: ${successful.map((item) => `${item.team} ${item.items.length} gare`).join(', ') || 'nessuna fonte raggiunta'}`)
+if (failed.length) console.warn('Fonti FIPAV non disponibili; conservati i dati precedenti per le competizioni non raggiunte.', failed.map((result) => result.reason?.message ?? 'errore'))

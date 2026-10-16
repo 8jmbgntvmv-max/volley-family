@@ -13,7 +13,7 @@ import { lineupNewsForMatch, nextMatchesByTeam, relatedNewsForMatch } from './li
 import { newsSourceCatalog } from './lib/news-source-catalog.mjs'
 import { encodeRosterSubmission, mergeRosterAnnouncements } from './lib/roster-submission.mjs'
 import { applyRosterOverrides, hideRosterPlayer, readRosterOverrides, renameRosterPlayer, rosterOverrideKey, writeRosterOverrides, type RosterOverrides } from './lib/roster-overrides.mjs'
-import { matches, teams, type Match, type TeamId } from './data/schedule'
+import { matches as initialMatches, teams, type Match, type TeamId } from './data/schedule'
 import { rosters, type RosterPlayer } from './data/rosters'
 
 type Screen = 'home' | 'agenda' | 'teams' | 'news' | 'board' | 'rules' | 'updates'
@@ -51,7 +51,7 @@ const scanDate = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'shor
 const dateLabel = (value: string) => longDate.format(new Date(`${value}T12:00:00`))
 const scoreLabel = (result: MatchResult) => `${result.firstTeamSets}–${result.secondTeamSets}`
 const setsLabel = (result: MatchResult) => result.sets.map((set) => `${set.first}-${set.second}`).join(', ')
-const resultSourceLabel = (result: MatchResult) => result.team === 'altino' ? 'Lega Volley Femminile A2' : result.team === 'perugia' ? 'Lega Pallavolo Serie A' : 'FIPAV'
+const resultSourceLabel = (_result: MatchResult) => 'FIPAV'
 const normalized = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('it').replace(/[^a-z0-9]+/g, ' ').trim()
 const resultForMatch = (match: Match, results: ResultsByMatch) => {
   if (match.matchNumber && results[match.matchNumber]) return results[match.matchNumber]
@@ -184,8 +184,8 @@ function NewsSourceCatalog() {
   return <details className="news-catalog"><summary><div><strong>Catalogo delle testate</strong><small>{active.length} fonti incluse nella ricerca · {reference.length} riferimenti aggiuntivi</small></div><b>＋</b></summary><p>Le fonti nazionali sono cercate per tutte le squadre; Umbria, Campania e Abruzzo vengono abbinate rispettivamente a Perugia, Matese e Altino.</p><div className="news-catalog-grid">{newsSourceCatalog.map((source) => <a href={source.url} target="_blank" rel="noreferrer" className={source.searchable ? 'active' : 'reference'} key={source.id}><strong>{source.label}</strong><small>{source.area} · {source.searchable ? 'ricerca attiva' : 'riferimento per avversarie e trasferte'}</small></a>)}</div></details>
 }
 
-function WeekendVolley({ news, sourceStates, updatedAt, onOpenNews }: { news: NewsItem[]; sourceStates: NewsSourceState[]; updatedAt: string | null; onOpenNews: (team: TeamId) => void }) {
-  const upcoming = useMemo(() => nextMatchesByTeam(matches, teams.map((team) => team.id)), [])
+function WeekendVolley({ matches, news, sourceStates, updatedAt, onOpenNews }: { matches: Match[]; news: NewsItem[]; sourceStates: NewsSourceState[]; updatedAt: string | null; onOpenNews: (team: TeamId) => void }) {
+  const upcoming = useMemo(() => nextMatchesByTeam(matches, teams.map((team) => team.id)), [matches])
   return <section className="weekend-volley" aria-labelledby="weekend-volley-title"><div className="weekend-volley-heading"><div><p className="eyebrow">Dossier delle prossime gare</p><h2 id="weekend-volley-title">Weekend Volley</h2></div>{updatedAt && <span>Aggiornato {scanDate.format(new Date(updatedAt))}</span>}</div><p className="page-intro">Tre partite sotto osservazione. L’app riporta soltanto informazioni reperite nelle fonti pubbliche e segnala chiaramente ciò che non è ancora stato pubblicato.</p><div className="weekend-dossier-grid">{upcoming.map((match, index) => {
     const team = teams[index]
     if (!match) return <article className="weekend-dossier" key={team.id}><strong>{team.shortName}</strong><p>Prossima partita non disponibile.</p></article>
@@ -306,11 +306,12 @@ function HomeFamilyBoard({ onOpen }: { onOpen: () => void }) {
   return <section className="home-dashboard family-board-preview" aria-labelledby="family-board-preview-title"><div className="dashboard-heading"><div><p className="eyebrow">Spazio condiviso</p><h2 id="family-board-preview-title">Bacheca familiare</h2></div><button className="text-button" onClick={onOpen}>Apri</button></div><p className="dashboard-note">Scrivi quale partita seguirai oppure condividi una novità con tutta la famiglia.</p><button className="board-cta" onClick={onOpen}>Scrivi in bacheca</button></section>
 }
 
-function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout }: {
+function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout, matches }: {
   client: ReturnType<typeof createFamilyBoardClient>
   suggestedCode: string
   onCodeConsumed: () => void
   onLogout: () => void
+  matches: Match[]
 }) {
   const [messages, setMessages] = useState<FamilyBoardMessage[]>([])
   const [joined, setJoined] = useState(false)
@@ -322,7 +323,7 @@ function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout }: {
   const [kind, setKind] = useState<FamilyBoardKind>('partita')
   const [matchId, setMatchId] = useState('')
   const [sending, setSending] = useState(false)
-  const futureMatches = useMemo(() => matches.filter((match) => match.date >= new Date().toISOString().slice(0, 10)).slice(0, 30), [])
+  const futureMatches = useMemo(() => matches.filter((match) => match.date >= new Date().toISOString().slice(0, 10)).slice(0, 30), [matches])
 
   const refresh = useCallback(async () => {
     if (!client.configured) return
@@ -389,8 +390,8 @@ function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout }: {
   </section>
 }
 
-function HomeResultsAndStandings({ results, leagueData }: { results: ResultsByMatch; leagueData: LeagueData | null }) {
-  return <section className="home-dashboard" aria-labelledby="home-results-title"><div className="dashboard-heading"><div><p className="eyebrow">Campionati</p><h2 id="home-results-title">Risultati e classifiche</h2></div></div><p className="dashboard-note">Risultati acquisiti automaticamente dalle fonti ufficiali: Lega Volley Femminile A2, Lega Pallavolo Serie A e FIPAV nazionale.</p><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Ultimi risultati</h3>{teams.map((team) => {
+function HomeResultsAndStandings({ matches, results, leagueData }: { matches: Match[]; results: ResultsByMatch; leagueData: LeagueData | null }) {
+  return <section className="home-dashboard" aria-labelledby="home-results-title"><div className="dashboard-heading"><div><p className="eyebrow">Campionati</p><h2 id="home-results-title">Risultati e classifiche</h2></div></div><p className="dashboard-note">Calendari, risultati e classifiche acquisiti automaticamente dai feed ufficiali FIPAV delle tre competizioni.</p><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Ultimi risultati</h3>{teams.map((team) => {
     const played = matches.filter((match) => match.team === team.id && resultForMatch(match, results)?.played).sort((a, b) => b.date.localeCompare(a.date))[0]
     const result = played ? resultForMatch(played, results) : undefined
     return <div className="scoreboard-row" key={team.id}><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>{played ? `${played.home ? team.shortName : played.opponent} – ${played.home ? played.opponent : team.shortName}` : 'In attesa della prima giornata'}</small></div><b>{result ? scoreLabel(result) : '—'}</b></div>
@@ -403,8 +404,8 @@ function teamScore(match: Match, result: MatchResult) {
     : { teamSets: result.secondTeamSets, opponentSets: result.firstTeamSets }
 }
 
-function HomeStatistics({ results, leagueData }: { results: ResultsByMatch; leagueData: LeagueData | null }) {
-  return <section className="home-dashboard" aria-labelledby="home-statistics-title"><div className="dashboard-heading"><div><p className="eyebrow">Numeri della stagione</p><h2 id="home-statistics-title">Statistiche</h2></div></div><p className="dashboard-note">Altino è collegata alla Lega Volley Femminile A2, Perugia alla Lega Pallavolo Serie A e Matese alla FIPAV nazionale. Le statistiche individuali appariranno soltanto quando saranno pubblicate dalla competizione.</p><div className="league-source-grid">{teams.map((team) => { const official = leagueData?.teams[team.id]; return official?.links.statistics || official?.links.results ? <a href={official.links.statistics ?? official.links.results} target="_blank" rel="noreferrer" key={team.id}><span className="team-dot" style={{ background: team.color }} />{team.shortName}<small>{official.source}</small></a> : null })}</div><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Ultima partita</h3>{teams.map((team) => {
+function HomeStatistics({ matches, results, leagueData }: { matches: Match[]; results: ResultsByMatch; leagueData: LeagueData | null }) {
+  return <section className="home-dashboard" aria-labelledby="home-statistics-title"><div className="dashboard-heading"><div><p className="eyebrow">Numeri della stagione</p><h2 id="home-statistics-title">Statistiche</h2></div></div><p className="dashboard-note">Le tre squadre sono collegate ai rispettivi feed FIPAV. Le statistiche individuali appariranno soltanto quando saranno pubblicate dalla competizione.</p><div className="league-source-grid">{teams.map((team) => { const official = leagueData?.teams[team.id]; return official?.links.statistics || official?.links.results ? <a href={official.links.statistics ?? official.links.results} target="_blank" rel="noreferrer" key={team.id}><span className="team-dot" style={{ background: team.color }} />{team.shortName}<small>{official.source}</small></a> : null })}</div><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Ultima partita</h3>{teams.map((team) => {
     const played = matches.filter((match) => match.team === team.id && resultForMatch(match, results)?.played).sort((a, b) => b.date.localeCompare(a.date))[0]
     const result = played ? resultForMatch(played, results) : undefined
     return <div className="stat-match" key={team.id}><div className="scoreboard-row"><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>{played ? `${dateLabel(played.date)} · ${played.opponent}` : 'Statistiche dopo la prima gara'}</small></div><b>{result ? scoreLabel(result) : '—'}</b></div>{result && <p>Parziali: {setsLabel(result)}</p>}</div>
@@ -440,6 +441,7 @@ function App() {
   const [newsSocialSubmitting, setNewsSocialSubmitting] = useState(false)
   const [newsRefreshMessage, setNewsRefreshMessage] = useState('')
   const [results, setResults] = useState<ResultsByMatch>({})
+  const [scheduleMatches, setScheduleMatches] = useState<Match[]>(initialMatches)
   const [leagueData, setLeagueData] = useState<LeagueData | null>(null)
   const [selectedAthlete, setSelectedAthlete] = useState<SelectedAthlete | null>(null)
   const [rosterOverrides, setRosterOverrides] = useState<RosterOverrides>(() => readRosterOverrides())
@@ -455,9 +457,9 @@ function App() {
     return { ...defaultUpdatePreferences, ...stored, teams: { ...defaultUpdatePreferences.teams, ...(stored.teams ?? {}) } }
   })
   const boardClient = useMemo(() => createFamilyBoardClient({ url: import.meta.env.VITE_SUPABASE_URL, anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY }), [])
-  const weekends = useMemo(() => groupByWeekend(matches), [])
+  const weekends = useMemo(() => groupByWeekend(scheduleMatches), [scheduleMatches])
   const liveRosters = useMemo(() => applyRosterOverrides(mergeRosterAnnouncements(rosters, news), rosterOverrides), [news, rosterOverrides])
-  const updates = useMemo(() => buildUpdateItems(news, results, matches), [news, results])
+  const updates = useMemo(() => buildUpdateItems(news, results, scheduleMatches), [news, results, scheduleMatches])
   const visibleUpdates = useMemo(() => updates.filter((item) => preferences[item.kind] && preferences.teams[item.team]), [updates, preferences])
   const todayUpdates = useMemo(() => todaysUpdateItems(visibleUpdates), [visibleUpdates])
   const unreadUpdates = useMemo(() => todayUpdates.filter((item) => !seenIds.has(item.id)), [todayUpdates, seenIds])
@@ -474,10 +476,11 @@ function App() {
       setNewsSourceStates(payload.sources ?? [])
       return payload.updatedAt ?? null
     }
-    const [newsResponse, resultsResponse, leagueResponse] = await Promise.allSettled([json('news.json'), json('results.json'), json('league-data.json')])
+    const [newsResponse, resultsResponse, leagueResponse, scheduleResponse] = await Promise.allSettled([json('news.json'), json('results.json'), json('league-data.json'), json('schedule.json')])
     const baseline = newsResponse.status === 'fulfilled' ? applyNews(newsResponse.value) : null
     if (resultsResponse.status === 'fulfilled') setResults(Object.fromEntries((resultsResponse.value.items ?? []).map((item: MatchResult) => [item.matchNumber, item])))
     if (leagueResponse.status === 'fulfilled') setLeagueData(leagueResponse.value)
+    if (scheduleResponse.status === 'fulfilled' && Array.isArray(scheduleResponse.value.items) && scheduleResponse.value.items.length >= 80) setScheduleMatches(scheduleResponse.value.items)
     setDataReady(true)
     if (!manual) return
     if (newsResponse.status !== 'fulfilled') {
@@ -630,18 +633,18 @@ function App() {
         <HomeLiveStreams />
         <HomeMatchFocus news={news} onOpenNews={() => setScreen('news')} />
         <HomeRosters rosterData={liveRosters} onSelectAthlete={setSelectedAthlete} onEditAthlete={editRosterAthlete} onDeleteAthlete={deleteRosterAthlete} onResetRoster={resetRoster} hasOverrides={(team) => Boolean(rosterOverrides.hidden?.[team]?.length || Object.keys(rosterOverrides.renamed?.[team] ?? {}).length)} />
-        <HomeResultsAndStandings results={results} leagueData={leagueData} />
-        <HomeStatistics results={results} leagueData={leagueData} />
+        <HomeResultsAndStandings matches={scheduleMatches} results={results} leagueData={leagueData} />
+        <HomeStatistics matches={scheduleMatches} results={results} leagueData={leagueData} />
         <section className="section-block"><div className="section-title"><div><p className="eyebrow">Le tue squadre</p><h2>Tre campionati, un’unica agenda</h2></div><button className="text-button" onClick={() => setScreen('teams')}>Vedi tutte</button></div>
           <div className="team-grid">{teams.map((team) => <button className="team-card" key={team.id} onClick={() => { setTeamFilter(team.id); setScreen('teams') }}><span className="team-badge" style={{ background: team.softColor, color: team.color }}>{team.code}</span><strong>{team.shortName}</strong><small>{team.championship}</small></button>)}</div>
         </section>
         <section className="rule-summary"><span className="check">▦</span><div><p className="eyebrow">Calendario neutrale</p><h2>Decidi tu quale partita seguire</h2><p>L’app non assegna priorità e non indica una partita preferita.</p></div></section>
       </>}
-      {screen === 'agenda' && <section className="page"><WeekendVolley news={news} sourceStates={newsSourceStates} updatedAt={newsUpdatedAt} onOpenNews={(team) => { setNewsFilter(team); setScreen('news') }} /><div className="calendar-divider"><p className="eyebrow">Agenda completa</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le gare sono presentate senza suggerimenti né graduatorie. I risultati ufficiali di Lega Volley Femminile A2, Lega Pallavolo Serie A e FIPAV vengono aggiornati automaticamente.</p></div><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
-      {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div>{team.id === 'matese' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali FIPAV nazionale, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.id === 'altino' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali Lega Volley Femminile A2, aggiornati con la pubblicazione periodica dell’app.</span></div>}{team.id === 'perugia' && <div className="official-note"><strong>Risultati automatici</strong><span>Dati ufficiali Lega Pallavolo Serie A, disponibili dall’inizio del campionato.</span></div>}{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{matches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={resultForMatch(match, results)} /></div>)}</section>)}</section>}
+      {screen === 'agenda' && <section className="page"><WeekendVolley matches={scheduleMatches} news={news} sourceStates={newsSourceStates} updatedAt={newsUpdatedAt} onOpenNews={(team) => { setNewsFilter(team); setScreen('news') }} /><div className="calendar-divider"><p className="eyebrow">Calendario neutrale</p><h2>Tutti e tre i calendari</h2><p className="page-intro">Le partite sono presentate tutte senza suggerimenti né graduatorie. Calendari, risultati e classifiche provengono dai feed FIPAV di A2 femminile, B2 femminile girone H e A1 maschile. Gli articoli e i post restano acquisiti dalle fonti stampa e social dedicate.</p></div><div className="compare-legend"><span><i className="legend-home" />In casa</span><span><i className="legend-away" />Trasferta</span></div><div className="agenda-list">{weekends.map((weekend) => <section className="week-card compare-week" key={weekend.key}><div className="week-heading"><div><strong>Settimana del {dateLabel(weekend.key)}</strong><span>Partite in programma e risultati</span></div></div><div className="comparison-grid">{teams.map((team) => <ComparisonCell key={team.id} teamId={team.id} weekMatches={weekend.matches} results={results} />)}</div></section>)}</div></section>}
+      {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div><div className="official-note"><strong>Calendario e risultati automatici</strong><span>Dati ufficiali FIPAV · {team.championship}, aggiornati con la pubblicazione periodica dell’app.</span></div>{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{scheduleMatches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={resultForMatch(match, results)} /></div>)}</section>)}</section>}
       {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><NewsRefreshPanel updatedAt={newsUpdatedAt} sourceStates={newsSourceStates.filter((source) => newsFilter === 'all' || source.team === newsFilter || source.team === null)} refreshing={newsRefreshing} socialSubmitting={newsSocialSubmitting} message={newsRefreshMessage} onRefresh={() => { void loadData(true) }} onSubmitSocial={submitSocialNews} /><NewsSourceCatalog /><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
       {screen === 'updates' && <UpdatesCenter updates={todayUpdates} seenIds={seenIds} preferences={preferences} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onOpenResults={() => setScreen('agenda')} />}
-      {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} />}
+      {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} matches={scheduleMatches} />}
       {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}
     </main>
     {editingRosterAthlete && <RosterEditDialog entry={editingRosterAthlete} onClose={() => setEditingRosterAthlete(null)} onSave={saveRosterAthlete} />}
