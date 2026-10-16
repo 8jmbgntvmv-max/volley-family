@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { groupByWeekend } from '../src/lib/decision.mjs'
 import { extractMateseResults } from '../src/lib/fipav-results.mjs'
-import { FIPAV_COMPETITIONS, parseFipavCalendar, parseFipavStandings, publicFixture, resultFromFipavMatch } from '../src/lib/fipav-season.mjs'
+import { FIPAV_COMPETITIONS, parseFipavCalendar, parseFipavStandings, parseFipavStandingsTable, publicFixture, resultFromFipavMatch } from '../src/lib/fipav-season.mjs'
 import { parseLegaAResults, parseLfvResults } from '../src/lib/league-results.mjs'
 import { articleImageFromHtml } from '../src/lib/news-image.mjs'
 import { mergeNewsItems } from '../src/lib/news-items.mjs'
@@ -25,6 +25,7 @@ test('usa le competizioni FIPAV corrette per Altino, Matese e Perugia', () => {
   assert.deepEqual(Object.fromEntries(Object.entries(FIPAV_COMPETITIONS).map(([team, value]) => [team, [value.serie, value.sesso, value.girone, value.teamCode]])), {
     altino: ['A2', 'F', 'U', '10929'], matese: ['B2', 'F', 'H', '10387'], perugia: ['A1', 'M', 'U', '7290'],
   })
+  assert.equal(FIPAV_COMPETITIONS.altino.statisticsUrl, 'https://www.legavolleyfemminile.it/centro-statistiche/?stagione=2026&serie=2&tipocomp=RS')
 })
 test('converte calendario e classifica FIPAV in dati collegati alla squadra giusta', () => {
   const config = FIPAV_COMPETITIONS.matese
@@ -37,6 +38,10 @@ test('converte calendario e classifica FIPAV in dati collegati alla squadra gius
   assert.equal(publicFixture(selected[0])._source, undefined)
   const standing = parseFipavStandings({ data: { teams: [{ position: 7, points: 12, played: 5, won: 4, lost: 1, sets_won: 13, sets_lost: 6, team: { code: '10387' } }] } }, 'matese', config)
   assert.deepEqual(standing, { position: 7, points: 12, played: 5, wins: 4, losses: 1, setsWon: 13, setsLost: 6, pointsWon: 0, pointsLost: 0 })
+  const table = Array.from({ length: 12 }, (_, index) => ({ position: index + 1, points: 30 - index, played: 12, won: 10, lost: 2, sets_won: 31, sets_lost: 12, team: { code: index === 0 ? '10387' : `10${index}`, name: `Squadra ${index + 1}` } }))
+  const fullTable = parseFipavStandingsTable({ data: { teams: table } }, 'matese', config)
+  assert.equal(fullTable.length, 12)
+  assert.deepEqual(fullTable[0], { position: 1, teamCode: '10387', name: 'Squadra 1', points: 30, played: 12, wins: 10, losses: 2, setsWon: 31, setsLost: 12, pointsWon: 0, pointsLost: 0 })
 })
 test('include le 26 gare Matese del girone H', async () => { const source = await readFile(new URL('../src/data/schedule.ts', import.meta.url), 'utf8'); assert.equal((source.match(/\['11\d{3}','202[67]-/g) ?? []).length, 26); assert.match(source, /name: 'FAAM Matese'/); assert.match(source, /status: 'published'/) })
 test('mostra sempre una anteprima news anche senza immagine', async () => { const source = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert.match(source, /className="news-preview"/); assert.match(source, /onError=/) })
@@ -354,4 +359,22 @@ test('apre app e bacheca senza codici, mantenendo la bacheca condivisa', async (
   assert.match(migration, /on conflict \(family_id, user_id\) do update/)
   assert.match(schema, /author_id = auth\.uid\(\)/)
   assert.match(schema, /enable row level security/)
+})
+test('mostra in Home le ultime cinque gare concluse e forza l’aggiornamento PWA', async () => {
+  const [app, worker] = await Promise.all([
+    readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8'),
+  ])
+  assert.match(app, /Gare disputate/)
+  assert.match(app, /Classifica completa/)
+  assert.match(app, /leagueData\?\.standings\?\.altino/)
+  assert.match(app, /<th scope="col">Pt<\/th>/)
+  assert.match(app, /\.slice\(0, 5\)/)
+  assert.match(app, /parziali \$\{linkedResult\}/)
+  assert.match(app, /\.wins \?\? 0\} V · \$\{official\.standing\.losses \?\? 0\} P/)
+  assert.match(app, /HomeResultsAndStandings matches=\{scheduleMatches\} results=\{results\} leagueData=\{leagueData\} \/>/)
+  assert.match(worker, /volley-family-v14/)
+  assert.match(worker, /self\.skipWaiting\(\)/)
+  assert.match(worker, /self\.clients\.claim\(\)/)
+  assert.match(worker, /key\.startsWith\('volley-family-v'\)/)
 })

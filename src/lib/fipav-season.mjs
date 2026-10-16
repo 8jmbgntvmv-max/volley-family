@@ -1,5 +1,5 @@
 export const FIPAV_COMPETITIONS = {
-  altino: { serie: 'A2', sesso: 'F', girone: 'U', teamCode: '10929', label: 'Serie A2 Femminile', url: 'https://www.federvolley.it/campionati/serie-a-b#home/2026/A2/F/U' },
+  altino: { serie: 'A2', sesso: 'F', girone: 'U', teamCode: '10929', label: 'Serie A2 Femminile', url: 'https://www.federvolley.it/campionati/serie-a-b#home/2026/A2/F/U', statisticsUrl: 'https://www.legavolleyfemminile.it/centro-statistiche/?stagione=2026&serie=2&tipocomp=RS' },
   matese: { serie: 'B2', sesso: 'F', girone: 'H', teamCode: '10387', label: 'Serie B2 Femminile · Girone H', url: 'https://www.federvolley.it/campionati/serie-a-b#home/2026/B2/F/H' },
   perugia: { serie: 'A1', sesso: 'M', girone: 'U', teamCode: '7290', label: 'Serie A1 Maschile', url: 'https://www.federvolley.it/campionati/serie-a-b#home/2026/A1/M/U' },
 }
@@ -61,6 +61,27 @@ export function parseFipavStandings(payload, teamId, competition = FIPAV_COMPETI
     pointsWon: asNumber(selected.points_won),
     pointsLost: asNumber(selected.points_lost),
   }
+}
+
+export function parseFipavStandingsTable(payload, teamId, competition = FIPAV_COMPETITIONS[teamId]) {
+  const teams = payload?.data?.teams
+  if (!Array.isArray(teams)) throw new Error(`Formato classifica FIPAV non riconosciuto (${teamId})`)
+  const table = teams.map((entry) => ({
+    position: asNumber(entry.position),
+    teamCode: String(entry.team?.code ?? entry.team?.id ?? ''),
+    name: String(entry.team?.shortName || entry.team?.name || ''),
+    points: asNumber(entry.points),
+    played: asNumber(entry.played),
+    wins: asNumber(entry.won),
+    losses: asNumber(entry.lost),
+    setsWon: asNumber(entry.sets_won),
+    setsLost: asNumber(entry.sets_lost),
+    pointsWon: asNumber(entry.points_won),
+    pointsLost: asNumber(entry.points_lost),
+  })).filter((entry) => entry.name)
+  if (!table.some((entry) => entry.teamCode === competition.teamCode)) throw new Error(`Squadra ${competition.teamCode} non presente nella classifica FIPAV ${teamId}`)
+  if (table.length < 10) throw new Error(`Classifica FIPAV ${teamId} incompleta: ${table.length} squadre`)
+  return table.sort((a, b) => a.position - b.position)
 }
 
 export function resultFromFipavMatch(match) {
