@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import './App.css'
-import './Standings.css'
+import './LeagueLinks.css'
 import './AthleteMedia.css'
 import './LiveStreams.css'
 import { groupByWeekend } from './lib/decision.mjs'
@@ -25,8 +25,7 @@ type MatchResult = { matchNumber: string; team?: TeamId; date?: string; opponent
 type ResultsByMatch = Record<string, MatchResult>
 type PlayerStats = { name: string; profileUrl?: string; appearances?: number | null; points?: number | null; attacks?: number | null; attackPoints?: number | null; attackPercentage?: number | null; serves?: number | null; aces?: number | null; blocks?: number | null; serveErrors?: number | null; perfectReceptions?: number | null }
 type LeagueTeamData = { source: string; season: string; links: { results?: string; standings?: string; statistics?: string }; standing: null | { position?: number; points?: number; played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; stats: null | { played?: number; wins?: number; losses?: number; setsWon?: number; setsLost?: number }; players?: PlayerStats[] }
-type LeagueStandingRow = { position: number; teamCode: string; name: string; points: number; played: number; wins: number; losses: number; setsWon: number; setsLost: number; pointsWon: number; pointsLost: number }
-type LeagueData = { updatedAt: string | null; teams: Record<TeamId, LeagueTeamData>; standings?: Partial<Record<TeamId, LeagueStandingRow[]>> }
+type LeagueData = { updatedAt: string | null; teams: Record<TeamId, LeagueTeamData> }
 type SelectedAthlete = { team: TeamId; player: RosterPlayer }
 type EditableRosterPlayer = RosterPlayer & { rosterKey?: string }
 type RosterView = Omit<(typeof rosters)[number], 'players'> & { players: EditableRosterPlayer[] }
@@ -370,8 +369,6 @@ function FamilyBoard({ client, onLogout, matches }: {
 }
 
 function HomeResultsAndStandings({ matches, results, leagueData }: { matches: Match[]; results: ResultsByMatch; leagueData: LeagueData | null }) {
-  const [showFullStandings, setShowFullStandings] = useState(false)
-  const altinoStandings = leagueData?.standings?.altino ?? []
   return <section className="home-dashboard" aria-labelledby="home-results-title"><div className="dashboard-heading"><div><p className="eyebrow">Campionati</p><h2 id="home-results-title">Risultati e classifiche</h2></div></div><p className="dashboard-note">Risultati ufficiali FIPAV delle gare disputate e classifiche aggiornate. Le nuove gare compariranno appena concluse.</p><div className="scoreboard-grid"><article className="scoreboard-card"><h3>Gare disputate</h3>{teams.map((team) => {
     const played = matches.filter((match) => match.team === team.id && resultForMatch(match, results)?.played).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
     return played.length ? played.map((match) => {
@@ -380,7 +377,7 @@ function HomeResultsAndStandings({ matches, results, leagueData }: { matches: Ma
       const linkedResult = match.home ? setsLabel(result) : result.sets.map((set) => `${set.second}-${set.first}`).join(', ')
       return <div className="scoreboard-row" key={match.id}><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName} – {match.opponent}</strong><small>{dateLabel(match.date)}{linkedResult ? ` · parziali ${linkedResult}` : ''}</small></div><b>{score}</b></div>
     }) : <div className="scoreboard-row" key={team.id}><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>In attesa della prima giornata</small></div><b>—</b></div>
-  })}</article><article className="scoreboard-card"><div className="standings-card-heading"><h3>Classifiche 2026/27</h3>{altinoStandings.length > 0 && <button className="text-button" type="button" aria-expanded={showFullStandings} onClick={() => setShowFullStandings((value) => !value)}>{showFullStandings ? 'Nascondi classifica' : 'Classifica completa'}</button>}</div>{teams.map((team) => { const official = leagueData?.teams[team.id]; return <div className="scoreboard-row" key={team.id}><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>{official?.standing?.played ? `${official.standing.points ?? 0} punti · ${official.standing.wins ?? 0} V · ${official.standing.losses ?? 0} P` : 'In attesa della prima classifica'}</small></div><b>{official?.standing?.played && official.standing.position ? `${official.standing.position}ª` : '—'}</b></div> })}{showFullStandings && <div className="standings-table-wrap"><h4>Serie A2 Femminile · Girone unico</h4><table className="standings-table"><thead><tr><th scope="col">#</th><th scope="col">Squadra</th><th scope="col">Pt</th><th scope="col">G</th><th scope="col">V</th><th scope="col">P</th><th scope="col">Set</th></tr></thead><tbody>{altinoStandings.map((row) => <tr key={row.teamCode}><th scope="row">{row.position}</th><td>{row.name}</td><td><strong>{row.points}</strong></td><td>{row.played}</td><td>{row.wins}</td><td>{row.losses}</td><td>{row.setsWon}-{row.setsLost}</td></tr>)}</tbody></table></div>}<p className="standings-note">{leagueData?.updatedAt ? `Classifica FIPAV aggiornata il ${scanDate.format(new Date(leagueData.updatedAt))}.` : 'Le posizioni appariranno dopo la pubblicazione della prima classifica ufficiale.'}</p></article></div></section>
+  })}</article><article className="scoreboard-card"><h3>Classifiche 2026/27</h3>{teams.map((team) => { const official = leagueData?.teams[team.id]; return <div className="league-standing-item" key={team.id}><div className="scoreboard-row"><span className="team-dot" style={{ background: team.color }} /><div><strong>{team.shortName}</strong><small>{official?.standing?.played ? `${official.standing.points ?? 0} punti · ${official.standing.wins ?? 0} V · ${official.standing.losses ?? 0} P` : 'In attesa della prima classifica'}</small></div><b>{official?.standing?.played && official.standing.position ? `${official.standing.position}ª` : '—'}</b></div><div className="league-direct-links">{official?.links.results && <a href={official.links.results} target="_blank" rel="noreferrer">Risultati</a>}{official?.links.standings && <a href={official.links.standings} target="_blank" rel="noreferrer">Classifica completa</a>}{official?.links.statistics && <a href={official.links.statistics} target="_blank" rel="noreferrer">Statistiche squadra e atlete</a>}</div></div> })}<p className="standings-note">{leagueData?.updatedAt ? `Collegamenti ufficiali aggiornati il ${scanDate.format(new Date(leagueData.updatedAt))}.` : 'Apri i collegamenti ufficiali per risultati e classifiche.'}</p></article></div></section>
 }
 
 function teamScore(match: Match, result: MatchResult) {
