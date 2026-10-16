@@ -65,7 +65,6 @@ export function createFamilyBoardClient(config = {}, storage = localStorage) {
     if (!response.ok) {
       const message = String(payload?.message ?? '')
       if (message.includes('VF_NOT_MEMBER')) throw new Error('VF_NOT_MEMBER')
-      if (message.includes('VF_INVALID_INVITE')) throw new Error('Codice famiglia non riconosciuto.')
       if (message.includes('VF_REFRESH_NOT_CONFIGURED')) throw new Error('VF_REFRESH_NOT_CONFIGURED')
       if (message.includes('VF_INVALID_NEWS_LINK')) throw new Error('Inserisci un collegamento Instagram o Facebook valido.')
       throw new Error('La bacheca non è raggiungibile in questo momento.')
@@ -76,7 +75,7 @@ export function createFamilyBoardClient(config = {}, storage = localStorage) {
   return {
     configured: isFamilyBoardConfigured(config),
     clearSession: () => storage.removeItem(sessionKey),
-    join: (familyCode, displayName) => rpc('vf_join_family', { p_invite_code: familyCode.trim(), p_display_name: displayName.trim() }),
+    join: (displayName) => rpc('vf_join_family', { p_display_name: displayName.trim() }),
     list: () => rpc('vf_list_family_messages'),
     post: ({ content, kind, matchId }) => rpc('vf_post_family_message', { p_content: content, p_kind: kind, p_match_id: matchId || null }),
     remove: (id) => rpc('vf_delete_family_message', { p_message_id: id }),

@@ -31,7 +31,7 @@ alter table public.vf_family_members enable row level security;
 alter table public.vf_family_messages enable row level security;
 revoke all on public.vf_families, public.vf_family_members, public.vf_family_messages from anon, authenticated;
 
-create or replace function public.vf_join_family(p_invite_code text, p_display_name text)
+create or replace function public.vf_join_family(p_display_name text)
 returns void
 language plpgsql security definer set search_path = public
 as $$
@@ -39,9 +39,8 @@ declare selected_family uuid;
 begin
   if auth.uid() is null then raise exception 'VF_AUTH_REQUIRED'; end if;
   if char_length(trim(p_display_name)) not between 2 and 40 then raise exception 'VF_INVALID_NAME'; end if;
-  select id into selected_family from public.vf_families
-    where invite_hash = encode(extensions.digest(trim(p_invite_code), 'sha256'), 'hex');
-  if selected_family is null then raise exception 'VF_INVALID_INVITE'; end if;
+  select id into selected_family from public.vf_families where name = 'Volley Family' order by id limit 1;
+  if selected_family is null then raise exception 'VF_FAMILY_NOT_CONFIGURED'; end if;
   insert into public.vf_family_members(family_id, user_id, display_name)
   values (selected_family, auth.uid(), trim(p_display_name))
   on conflict (family_id, user_id) do update set display_name = excluded.display_name;
@@ -85,9 +84,9 @@ begin
 end;
 $$;
 
-revoke all on function public.vf_join_family(text, text), public.vf_list_family_messages(), public.vf_post_family_message(text, text, text), public.vf_delete_family_message(uuid) from public;
-grant execute on function public.vf_join_family(text, text), public.vf_list_family_messages(), public.vf_post_family_message(text, text, text), public.vf_delete_family_message(uuid) to authenticated;
+revoke all on function public.vf_join_family(text), public.vf_list_family_messages(), public.vf_post_family_message(text, text, text), public.vf_delete_family_message(uuid) from public;
+grant execute on function public.vf_join_family(text), public.vf_list_family_messages(), public.vf_post_family_message(text, text, text), public.vf_delete_family_message(uuid) to authenticated;
 
 insert into public.vf_families(name, invite_hash)
-values ('Volley Family', 'e79955d72b1007ea278a0977d1d7a7324b68ecf219621ce527b9bc6b17bc76e8')
+values ('Volley Family', 'open-family-board-v1')
 on conflict (invite_hash) do nothing;

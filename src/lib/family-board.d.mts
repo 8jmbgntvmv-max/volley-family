@@ -11,7 +11,7 @@ export type FamilyBoardMessage = {
 export type FamilyBoardClient = {
   configured: boolean
   clearSession: () => void
-  join: (familyCode: string, displayName: string) => Promise<unknown>
+  join: (displayName: string) => Promise<unknown>
   list: () => Promise<FamilyBoardMessage[]>
   post: (message: { content: string; kind: FamilyBoardKind; matchId: string | null }) => Promise<unknown>
   remove: (id: string) => Promise<unknown>

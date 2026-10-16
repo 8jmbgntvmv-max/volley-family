@@ -341,13 +341,17 @@ test('predispone le dirette sui canali YouTube ufficiali', async () => {
   const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
   for (const label of ['Dirette delle partite', 'Apri diretta', 'Canale in attesa']) assert.match(app, new RegExp(label))
 })
-test('predispone accesso tramite invito, avvisi interni e bacheca familiare condivisa', async () => {
-  const [app, schema] = await Promise.all([
+test('apre app e bacheca senza codici, mantenendo la bacheca condivisa', async () => {
+  const [app, migration, schema] = await Promise.all([
     readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/open-family-board-migration.sql', import.meta.url), 'utf8'),
     readFile(new URL('../supabase/family-board.sql', import.meta.url), 'utf8'),
   ])
-  for (const value of ['Accesso familiare', 'Codice famiglia', 'Bacheca familiare', 'Pubblica per tutti', 'Segna tutto come letto', 'vf-seen-updates-v1']) assert.match(app, new RegExp(value))
-  assert.match(app, /familyInviteHash = '[a-f0-9]{64}'/)
+  for (const value of ['Bacheca familiare', 'Pubblica per tutti', 'Segna tutto come letto', 'vf-seen-updates-v1', 'chiunque abbia il link']) assert.match(app, new RegExp(value))
+  assert.doesNotMatch(app, /FamilyAccessGate|familyInviteHash|Codice famiglia|vf-family-access-v1/)
+  assert.match(migration, /drop function if exists public\.vf_join_family\(text, text\)/)
+  assert.match(migration, /create or replace function public\.vf_join_family\(p_display_name text\)/)
+  assert.match(migration, /on conflict \(family_id, user_id\) do update/)
   assert.match(schema, /author_id = auth\.uid\(\)/)
   assert.match(schema, /enable row level security/)
 })

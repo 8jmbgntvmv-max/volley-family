@@ -60,23 +60,6 @@ const resultForMatch = (match: Match, results: ResultsByMatch) => {
 const readStoredJson = <T,>(key: string, fallback: T): T => {
   try { return JSON.parse(localStorage.getItem(key) ?? '') as T } catch { return fallback }
 }
-const familyInviteHash = 'e79955d72b1007ea278a0977d1d7a7324b68ecf219621ce527b9bc6b17bc76e8'
-const sha256 = async (value: string) => {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value.trim()))
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-}
-
-function FamilyAccessGate({ checking, inviteError, onUnlock }: { checking: boolean; inviteError: boolean; onUnlock: (code: string) => Promise<boolean> }) {
-  const [code, setCode] = useState('')
-  const [error, setError] = useState(inviteError ? 'Il collegamento d’invito non è valido.' : '')
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
-    if (await onUnlock(code)) return
-    setError('Codice famiglia non riconosciuto.')
-  }
-  return <main className="access-gate"><div className="access-mark">VF</div><p className="eyebrow">Accesso familiare</p><h1>Volley Family</h1>{checking ? <p className="access-wait">Controllo dell’invito…</p> : <><p>Apri il link ricevuto su WhatsApp oppure inserisci il codice famiglia. L’accesso resterà memorizzato su questo telefono.</p><form onSubmit={submit}><label htmlFor="family-code">Codice famiglia</label><input id="family-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" /><button type="submit">Entra nell’app</button></form>{error && <div className="access-error">{error}</div>}<small>Il link può essere usato soltanto da chi lo riceve dalla famiglia.</small></>}</main>
-}
-
 function MatchRow({ match, result }: { match: Match; result?: MatchResult }) {
   const team = teams.find((item) => item.id === match.team)!
   const mapsUrl = googleMapsDirectionsUrl(match.venue)
@@ -303,13 +286,11 @@ function matchBoardLabel(match: Match) {
 }
 
 function HomeFamilyBoard({ onOpen }: { onOpen: () => void }) {
-  return <section className="home-dashboard family-board-preview" aria-labelledby="family-board-preview-title"><div className="dashboard-heading"><div><p className="eyebrow">Spazio condiviso</p><h2 id="family-board-preview-title">Bacheca familiare</h2></div><button className="text-button" onClick={onOpen}>Apri</button></div><p className="dashboard-note">Scrivi quale partita seguirai oppure condividi una novità con tutta la famiglia.</p><button className="board-cta" onClick={onOpen}>Scrivi in bacheca</button></section>
+  return <section className="home-dashboard family-board-preview" aria-labelledby="family-board-preview-title"><div className="dashboard-heading"><div><p className="eyebrow">Spazio condiviso</p><h2 id="family-board-preview-title">Bacheca familiare</h2></div><button className="text-button" onClick={onOpen}>Apri</button></div><p className="dashboard-note">Chiunque abbia il link può leggere e scrivere. Condividilo solo con le persone a cui vuoi dare accesso.</p><button className="board-cta" onClick={onOpen}>Scrivi in bacheca</button></section>
 }
 
-function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout, matches }: {
+function FamilyBoard({ client, onLogout, matches }: {
   client: ReturnType<typeof createFamilyBoardClient>
-  suggestedCode: string
-  onCodeConsumed: () => void
   onLogout: () => void
   matches: Match[]
 }) {
@@ -318,7 +299,6 @@ function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout, matches 
   const [loading, setLoading] = useState(client.configured)
   const [error, setError] = useState('')
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('vf-family-display-name-v1') ?? '')
-  const [familyCode, setFamilyCode] = useState(suggestedCode)
   const [content, setContent] = useState('')
   const [kind, setKind] = useState<FamilyBoardKind>('partita')
   const [matchId, setMatchId] = useState('')
@@ -347,13 +327,10 @@ function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout, matches 
   const join = async (event: FormEvent) => {
     event.preventDefault()
     if (displayName.trim().length < 2) { setError('Inserisci il tuo nome.'); return }
-    if (!familyCode.trim()) { setError('Inserisci il codice famiglia.'); return }
     setLoading(true)
     try {
-      await client.join(familyCode, displayName)
+      await client.join(displayName)
       localStorage.setItem('vf-family-display-name-v1', displayName.trim())
-      setFamilyCode('')
-      onCodeConsumed()
       await refresh()
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Non riesco ad attivare la bacheca.'); setLoading(false) }
   }
@@ -378,15 +355,15 @@ function FamilyBoard({ client, suggestedCode, onCodeConsumed, onLogout, matches 
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Il messaggio non è stato eliminato.') }
   }
 
-  return <section className="page family-board-page"><p className="eyebrow">Spazio della famiglia</p><h2>Bacheca familiare</h2><p className="page-intro">Tutti i membri invitati possono scrivere e leggere gli aggiornamenti.</p>
+  return <section className="page family-board-page"><p className="eyebrow">Spazio condiviso</p><h2>Bacheca familiare</h2><p className="page-intro">Bacheca aperta: chiunque abbia il link dell’app può leggere e scrivere. Scegli un nome visibile agli altri.</p>
     {!client.configured ? <article className="board-status"><strong>Collegamento in preparazione</strong><p>L’interfaccia è pronta. Per condividere davvero i messaggi fra i telefoni manca soltanto l’attivazione dell’archivio familiare online.</p></article>
       : loading && !joined ? <div className="board-loading">Controllo della bacheca…</div>
-        : !joined ? <form className="board-join" onSubmit={join}><strong>Attiva la bacheca su questo telefono</strong><p>Scegli il nome che vedranno gli altri familiari e inserisci il codice famiglia.</p><label htmlFor="board-name">Il tuo nome</label><input id="board-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={40} autoComplete="name" /><label htmlFor="board-code">Codice famiglia</label><input id="board-code" value={familyCode} onChange={(event) => setFamilyCode(event.target.value)} autoComplete="one-time-code" /><button disabled={loading}>Entra nella bacheca</button></form>
+        : !joined ? <form className="board-join" onSubmit={join}><strong>Entra nella bacheca</strong><p>La bacheca è aperta a chiunque abbia il link dell’app. Scegli il nome che comparirà accanto ai tuoi messaggi.</p><label htmlFor="board-name">Il tuo nome</label><input id="board-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={40} autoComplete="name" /><button disabled={loading}>Continua</button></form>
           : <><form className="board-compose" onSubmit={publish}><div className="board-compose-heading"><strong>Nuovo messaggio</strong><span>{content.length}/500</span></div><div className="board-kind-row">{(Object.keys(boardKindLabels) as FamilyBoardKind[]).map((value) => <button type="button" className={kind === value ? 'active' : ''} onClick={() => setKind(value)} key={value}>{boardKindLabels[value]}</button>)}</div>{kind === 'partita' && <label className="board-match-select">Partita collegata<select value={matchId} onChange={(event) => setMatchId(event.target.value)}><option value="">Nessuna partita specifica</option>{futureMatches.map((match) => <option value={match.id} key={match.id}>{matchBoardLabel(match)}</option>)}</select></label>}<textarea value={content} onChange={(event) => setContent(event.target.value)} maxLength={500} rows={4} placeholder={kind === 'partita' ? 'Es. Io seguirò Matese sabato…' : 'Scrivi un aggiornamento per la famiglia…'} /><button className="board-publish" disabled={sending}>{sending ? 'Pubblicazione…' : 'Pubblica per tutti'}</button></form>
             {error && <div className="board-error">{error}</div>}
             <div className="board-list">{messages.map((message) => { const linkedMatch = matches.find((match) => match.id === message.matchId); return <article className="board-message" key={message.id}><header><span>{message.authorName.slice(0, 1).toUpperCase()}</span><div><strong>{message.authorName}</strong><small>{boardKindLabels[message.kind]} · {boardDate.format(new Date(message.createdAt))}</small></div>{message.ownedByMe && <button onClick={() => remove(message)}>Elimina</button>}</header><p>{message.content}</p>{linkedMatch && <div className="board-linked-match">{matchBoardLabel(linkedMatch)}</div>}</article> })}{!messages.length && <div className="detail-empty"><strong>La bacheca è ancora vuota</strong><span>Scrivi il primo messaggio per la famiglia.</span></div>}</div></>}
     {client.configured && !loading && !joined && error && <div className="board-error">{error}</div>}
-    <button className="logout-button" onClick={onLogout}>Rimuovi l’accesso da questo telefono</button>
+    <button className="logout-button" onClick={onLogout}>Rimuovi il mio nome da questo telefono</button>
   </section>
 }
 
@@ -447,9 +424,6 @@ function App() {
   const [rosterOverrides, setRosterOverrides] = useState<RosterOverrides>(() => readRosterOverrides())
   const [editingRosterAthlete, setEditingRosterAthlete] = useState<{ team: TeamId; player: EditableRosterPlayer } | null>(null)
   const [dataReady, setDataReady] = useState(false)
-  const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'locked'>('checking')
-  const [inviteError, setInviteError] = useState(false)
-  const [boardInviteCode, setBoardInviteCode] = useState(() => sessionStorage.getItem('vf-family-board-invite-v1') ?? '')
   const [seenIds, setSeenIds] = useState<Set<string>>(() => new Set(readStoredJson<string[]>('vf-seen-updates-v1', [])))
   const [updatesInitialized, setUpdatesInitialized] = useState(() => localStorage.getItem('vf-updates-ready-v1') === '1')
   const [preferences, setPreferences] = useState<UpdatePreferences>(() => {
@@ -503,7 +477,7 @@ function App() {
       setNewsRefreshMessage('La ricerca è stata avviata, ma GitHub non ha ancora pubblicato il risultato. Puoi chiudere l’app: verrà acquisito automaticamente.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      if (code === 'VF_NOT_MEMBER') setNewsRefreshMessage('Per avviare la ricerca apri prima Bacheca, scegli il tuo nome e unisciti alla famiglia.')
+      if (code === 'VF_NOT_MEMBER') setNewsRefreshMessage('Per avviare la ricerca apri prima Bacheca e scegli il nome da mostrare agli altri.')
       else if (code === 'VF_REFRESH_NOT_CONFIGURED') setNewsRefreshMessage('Il collegamento sicuro per avviare la ricerca non è ancora configurato.')
       else setNewsRefreshMessage('Non è stato possibile avviare una nuova ricerca. Ho comunque acquisito l’ultimo controllo pubblicato.')
     } finally {
@@ -520,7 +494,7 @@ function App() {
       return true
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      if (code === 'VF_NOT_MEMBER') setNewsRefreshMessage('Per segnalare un annuncio apri prima Bacheca e unisciti alla famiglia.')
+      if (code === 'VF_NOT_MEMBER') setNewsRefreshMessage('Per segnalare un annuncio apri prima Bacheca e scegli il nome da mostrare agli altri.')
       else setNewsRefreshMessage(code || 'Non è stato possibile salvare questo annuncio.')
       return false
     } finally {
@@ -549,26 +523,6 @@ function App() {
   }
 
   useEffect(() => {
-    const checkAccess = async () => {
-      const url = new URL(window.location.href)
-      const invite = url.searchParams.get('invite')
-      if (invite) {
-        url.searchParams.delete('invite')
-        window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
-        if (await sha256(invite) === familyInviteHash) {
-          localStorage.setItem('vf-family-access-v1', 'granted')
-          sessionStorage.setItem('vf-family-board-invite-v1', invite)
-          setBoardInviteCode(invite)
-          setAccessStatus('granted')
-        } else { setInviteError(true); setAccessStatus('locked') }
-        return
-      }
-      setAccessStatus(localStorage.getItem('vf-family-access-v1') === 'granted' ? 'granted' : 'locked')
-    }
-    void checkAccess()
-  }, [])
-
-  useEffect(() => {
     void loadData()
     const timer = window.setInterval(() => { void loadData() }, 5 * 60 * 1000)
     const refreshVisible = () => { if (document.visibilityState === 'visible') void loadData() }
@@ -592,15 +546,6 @@ function App() {
     else void badge.clearAppBadge?.()
   }, [unreadUpdates.length])
 
-  const unlock = async (code: string) => {
-    if (await sha256(code) !== familyInviteHash) return false
-    localStorage.setItem('vf-family-access-v1', 'granted')
-    sessionStorage.setItem('vf-family-board-invite-v1', code.trim())
-    setBoardInviteCode(code.trim())
-    setAccessStatus('granted')
-    setInviteError(false)
-    return true
-  }
   const markRead = (id: string) => setSeenIds((current) => {
     const next = new Set(current).add(id)
     localStorage.setItem('vf-seen-updates-v1', JSON.stringify([...next].slice(-500)))
@@ -611,18 +556,12 @@ function App() {
     localStorage.setItem('vf-seen-updates-v1', JSON.stringify([...next].slice(-500)))
     return next
   })
-  const consumeBoardInvite = () => { sessionStorage.removeItem('vf-family-board-invite-v1'); setBoardInviteCode('') }
   const logout = () => {
-    localStorage.removeItem('vf-family-access-v1')
     localStorage.removeItem('vf-family-display-name-v1')
-    sessionStorage.removeItem('vf-family-board-invite-v1')
     boardClient.clearSession()
-    setBoardInviteCode('')
-    setAccessStatus('locked')
     setScreen('home')
   }
 
-  if (accessStatus !== 'granted') return <FamilyAccessGate checking={accessStatus === 'checking'} inviteError={inviteError} onUnlock={unlock} />
   return <div className="app-shell">
     <header className="topbar"><div><p className="eyebrow">Stagione 2026/27</p><h1>Volley Family</h1></div><div className="topbar-actions"><button className="updates-button" onClick={() => setScreen('updates')} aria-label={unreadUpdates.length === 1 ? 'Novità: 1 nuovo aggiornamento' : unreadUpdates.length ? `Novità: ${unreadUpdates.length} nuovi aggiornamenti` : 'Apri Novità'}><span>Novità</span>{unreadUpdates.length > 0 && <b>{unreadUpdates.length > 99 ? '99+' : unreadUpdates.length}</b>}</button><div className="app-mark">VF</div></div></header>
     <main className="content">
@@ -644,8 +583,8 @@ function App() {
       {screen === 'teams' && <section className="page"><p className="eyebrow">Squadre</p><h2>Calendari 2026/27</h2><div className="filter-row"><button className={teamFilter === 'all' ? 'active' : ''} onClick={() => setTeamFilter('all')}>Tutte</button>{teams.map((team) => <button className={teamFilter === team.id ? 'active' : ''} onClick={() => setTeamFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div>{teams.filter((team) => teamFilter === 'all' || team.id === teamFilter).map((team) => <section className="team-section" key={team.id}><div className="team-section-head"><span className="team-badge large" style={{ background: team.softColor, color: team.color }}>{team.code}</span><div><h3>{team.name}</h3><p>{team.championship}</p></div></div><div className="official-note"><strong>Calendario e risultati automatici</strong><span>Dati ufficiali FIPAV · {team.championship}, aggiornati con la pubblicazione periodica dell’app.</span></div>{team.status === 'pending' && <div className="pending-note"><strong>Area predisposta</strong><span>Il calendario ufficiale non è ancora disponibile. Sarà inserito senza modificare la logica dell’app.</span></div>}{scheduleMatches.filter((match) => match.team === team.id).map((match) => <div className="dated-match" key={match.id}><time>{dateLabel(match.date)}</time><MatchRow match={match} result={resultForMatch(match, results)} /></div>)}</section>)}</section>}
       {screen === 'news' && <section className="page"><p className="eyebrow">News e aggiornamenti</p><h2>Le tre società</h2><p className="page-intro">Notizie dalle fonti ufficiali e giornalistiche. I pulsanti social aprono sempre il profilo originale.</p><NewsRefreshPanel updatedAt={newsUpdatedAt} sourceStates={newsSourceStates.filter((source) => newsFilter === 'all' || source.team === newsFilter || source.team === null)} refreshing={newsRefreshing} socialSubmitting={newsSocialSubmitting} message={newsRefreshMessage} onRefresh={() => { void loadData(true) }} onSubmitSocial={submitSocialNews} /><NewsSourceCatalog /><AthleteFocus news={news} /><div className="filter-row"><button className={newsFilter === 'all' ? 'active' : ''} onClick={() => setNewsFilter('all')}>Tutte</button>{teams.map((team) => <button className={newsFilter === team.id ? 'active' : ''} onClick={() => setNewsFilter(team.id)} key={team.id}>{team.shortName}</button>)}</div><div className="source-grid">{teams.filter((team) => newsFilter === 'all' || newsFilter === team.id).map((team) => <article className="source-card" key={team.id}><div className="compare-team"><span className="team-dot" style={{ background: team.color }} /><strong>{team.shortName}</strong></div><div className="source-links">{Object.entries(sources[team.id]).map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label === 'site' ? 'Sito ufficiale' : label[0].toUpperCase() + label.slice(1)}</a>)}</div></article>)}</div><div className="news-list">{news.filter((item) => newsFilter === 'all' || item.team === newsFilter).map((item) => <NewsCard item={item} key={item.id} />)}{news.length === 0 && <div className="pending-note"><strong>Aggiornamenti in preparazione</strong><span>I collegamenti ai profili ufficiali sono già disponibili.</span></div>}</div></section>}
       {screen === 'updates' && <UpdatesCenter updates={todayUpdates} seenIds={seenIds} preferences={preferences} onPreferences={setPreferences} onMarkRead={markRead} onMarkAll={markAllRead} onOpenResults={() => setScreen('agenda')} />}
-      {screen === 'board' && <FamilyBoard client={boardClient} suggestedCode={boardInviteCode} onCodeConsumed={consumeBoardInvite} onLogout={logout} matches={scheduleMatches} />}
-      {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div><button className="logout-button" onClick={logout}>Rimuovi l’accesso da questo telefono</button></section>}
+      {screen === 'board' && <FamilyBoard client={boardClient} onLogout={logout} matches={scheduleMatches} />}
+      {screen === 'rules' && <section className="page"><p className="eyebrow">Regole</p><h2>Consultazione neutrale</h2><div className="rules-list"><article><span className="neutral">▦</span><div><h3>Tutte le partite sono equivalenti</h3><p>Nessuna squadra e nessuna gara ricevono una priorità automatica.</p></div></article><article><span className="neutral">⌂</span><div><h3>Casa e trasferta</h3><p>L’app distingue soltanto il luogo della gara, lasciando la scelta alla famiglia.</p></div></article></div><div className="info-card"><strong>Dati separati</strong><p>Volley Family è un’app sportiva autonoma. Non condivide dati o funzioni con applicazioni cliniche o gestionali.</p></div></section>}
     </main>
     {editingRosterAthlete && <RosterEditDialog entry={editingRosterAthlete} onClose={() => setEditingRosterAthlete(null)} onSave={saveRosterAthlete} />}
     {selectedAthlete && <AthleteDetail selected={selectedAthlete} news={news} leagueData={leagueData} onClose={() => setSelectedAthlete(null)} />}

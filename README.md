@@ -4,14 +4,14 @@ PWA familiare per seguire calendari, risultati, news e dirette di Altino, Matese
 
 ## Bacheca familiare
 
-La bacheca usa l'accesso anonimo di Supabase: ogni telefono riceve un'identità tecnica, mentre il codice famiglia abilita la lettura e la scrittura dei soli messaggi del gruppo. Nessun numero di telefono viene richiesto.
+La bacheca usa l'accesso anonimo di Supabase: ogni telefono riceve un'identità tecnica e può leggere e scrivere nella bacheca condivisa scegliendo un nome visibile. Non è richiesto un codice, una password o un numero di telefono. **Chiunque abbia il link pubblico dell'app può accedere alla bacheca e vedere o pubblicare messaggi; condividi il link solo con chi vuoi ammettere.**
 
 1. Crea un progetto Supabase e abilita `Authentication > Providers > Anonymous Sign-Ins`.
-2. Esegui `supabase/family-board.sql` nel SQL Editor. Lo script include già l'identificativo cifrato del codice famiglia usato nell'app.
+2. Per una nuova installazione, esegui `supabase/family-board.sql` nel SQL Editor.
 3. Configura nel repository GitHub le variabili `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 4. Avvia nuovamente il workflow `Pubblica Volley Family`.
 
-La chiave anonima è pubblica per natura; la protezione dei dati è affidata alle funzioni SQL e alle identità anonime. Le tabelle non sono accessibili direttamente dal browser.
+Per convertire un'installazione esistente, esegui una volta `supabase/open-family-board-migration.sql` nel SQL Editor dopo la pubblicazione dell'app. Mantiene i messaggi già presenti e rimuove il codice necessario per entrare. La chiave anonima è pubblica per natura; le tabelle non sono accessibili direttamente dal browser e ciascuno può eliminare soltanto i propri messaggi.
 
 ## Pulsante Cerca ora
 
@@ -20,7 +20,7 @@ Il pulsante News può avviare davvero il workflow di ricerca, senza attendere la
 1. Crea su GitHub un token fine-grained limitato al repository `8jmbgntvmv-max/volley-family`, con il solo permesso repository `Actions: Read and write`.
 2. In Supabase apri `Integrations > Vault`, crea un nuovo secret e usa il nome esatto `vf_github_actions_token`. Incolla il token soltanto nel campo protetto `Secret`, non nel SQL Editor o nel repository.
 3. Nel SQL Editor esegui tutto il file `supabase/news-refresh.sql`.
-4. Ogni familiare deve aver completato una volta l’accesso nella sezione Bacheca; questo impedisce richieste anonime esterne e limita una scansione ogni tre minuti.
+4. Per avviare una scansione o segnalare un post, il telefono deve prima aver scelto un nome nella sezione Bacheca. Le richieste sono limitate a una scansione ogni tre minuti.
 
 La stessa configurazione abilita “Segnala un annuncio social”: il collegamento Instagram o Facebook viene salvato, letto dal workflow e aggiunto alle News. Il token resta cifrato nel Vault Supabase e non viene inserito nell’app o nel repository.
 
