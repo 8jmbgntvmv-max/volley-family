@@ -376,8 +376,16 @@ test('mostra risultati, classifiche complete e statistiche tramite link ufficial
   assert.match(app, /parziali \$\{linkedResult\}/)
   assert.match(app, /\.wins \?\? 0\} V · \$\{official\.standing\.losses \?\? 0\} P/)
   assert.match(app, /HomeResultsAndStandings matches=\{scheduleMatches\} results=\{results\} leagueData=\{leagueData\} \/>/)
-  assert.match(worker, /volley-family-v16/)
+  assert.match(worker, /volley-family-v17/)
   assert.match(worker, /self\.skipWaiting\(\)/)
   assert.match(worker, /self\.clients\.claim\(\)/)
   assert.match(worker, /key\.startsWith\('volley-family-v'\)/)
+})
+
+test('nel calendario risultato e nome avversaria restano dentro la propria scheda', async () => {
+  const css = await readFile(new URL('../src/App.css', import.meta.url), 'utf8')
+  assert.match(css, /\.compare-opponent\{display:grid;grid-template-columns:minmax\(0,1fr\) auto/)
+  assert.match(css, /\.compare-opponent strong\{overflow:visible;white-space:normal/)
+  assert.match(css, /\.compare-match small\{min-width:0;overflow-wrap:anywhere/)
+  assert.match(css, /\.comparison-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/)
 })
